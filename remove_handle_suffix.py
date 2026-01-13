@@ -137,17 +137,74 @@ def modify_sidebar_files():
     return modified
 
 
+RESOLVE_URI_FILE = 'src/state/queries/resolve-uri.ts'
+
+def modify_resolve_uri():
+    """Add default suffix to handles without one when resolving."""
+    if not os.path.exists(RESOLVE_URI_FILE):
+        print(f"Error: File not found: {RESOLVE_URI_FILE}")
+        return False
+
+    print(f"Reading {RESOLVE_URI_FILE}...")
+    with open(RESOLVE_URI_FILE, 'r', encoding='utf-8') as f:
+        content = f.read()
+
+    # Check if already modified
+    if 'ensureHandleSuffix' in content:
+        print(f"{RESOLVE_URI_FILE} already modified.")
+        return True
+
+    # Add import
+    old_import = "import {STALE} from '#/state/queries'"
+    new_import = """import {STALE} from '#/state/queries'
+import {ensureHandleSuffix} from '#/lib/strings/handles'"""
+    
+    if old_import not in content:
+        print("Error: Could not find import line in resolve-uri.ts")
+        return False
+
+    content = content.replace(old_import, new_import)
+
+    # Modify the queryFn to add suffix before resolving
+    old_code = '''if (!didOrHandle) return ''
+      // Just return the did if it's already one
+      if (didOrHandle.startsWith('did:')) return didOrHandle
+
+      const res = await agent.resolveHandle({handle: didOrHandle})'''
+
+    new_code = '''if (!didOrHandle) return ''
+      // Just return the did if it's already one
+      if (didOrHandle.startsWith('did:')) return didOrHandle
+
+      // Add default suffix if handle has no dot
+      const handleToResolve = ensureHandleSuffix(didOrHandle)
+      const res = await agent.resolveHandle({handle: handleToResolve})'''
+
+    if old_code not in content:
+        print("Error: Could not find queryFn code in resolve-uri.ts")
+        return False
+
+    content = content.replace(old_code, new_code)
+
+    with open(RESOLVE_URI_FILE, 'w', encoding='utf-8') as f:
+        f.write(content)
+
+    print(f"Successfully modified {RESOLVE_URI_FILE}")
+    return True
+
 def main():
     print(f"Configuring handle suffix system with default: {DEFAULT_SUFFIX}")
     print("=" * 60)
 
     success1 = modify_handles_file()
     success2 = modify_sidebar_files()
+    success3 = modify_resolve_uri()
 
     print("=" * 60)
     if success1:
         print("✅ Handle suffix removal configured successfully!")
         print(f"   - Display: 'user{DEFAULT_SUFFIX}' → '@user'")
+        print(f"   - URLs: '/profile/user' → resolves to 'user{DEFAULT_SUFFIX}'")
     else:
         print("⚠️  Some modifications failed. Check error messages above.")
 
