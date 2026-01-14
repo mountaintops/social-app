@@ -60,6 +60,17 @@ def comment_out_indent(content, target_starts_with, matching_strings):
             block_content = [line]
             closed = False
             
+            # Check if we're inside a conditional expression like {hasSession && (
+            # by looking at the previous line
+            inside_conditional = False
+            conditional_start_line_idx = None
+            if i > 0:
+                prev_line = lines[i-1].strip()
+                # Check for patterns like: {condition && (, {condition ? (
+                if prev_line.endswith('(') and ('&&' in prev_line or '?' in prev_line):
+                    inside_conditional = True
+                    conditional_start_line_idx = i - 1
+            
             if line.strip().endswith('/>'):
                  closed = True
                  should_comment = False
@@ -68,9 +79,28 @@ def comment_out_indent(content, target_starts_with, matching_strings):
                          should_comment = True
                          break
                  if should_comment:
-                     new_lines.append(f"{' ' * indent}{{/*")
-                     new_lines.append(line)
-                     new_lines.append(f"{' ' * indent}*/}}")
+                     if inside_conditional:
+                         # Comment out from the conditional start
+                         # Pop the conditional line from new_lines and wrap everything
+                         if new_lines and new_lines[-1] == lines[conditional_start_line_idx]:
+                             cond_line = new_lines.pop()
+                             cond_indent = len(cond_line) - len(cond_line.lstrip())
+                             # Find closing )} on next lines
+                             end_j = i + 1
+                             while end_j < len(lines) and lines[end_j].strip() in [')', ')}',' )}']:
+                                 end_j += 1
+                             # Wrap the entire conditional
+                             new_lines.append(f"{' ' * cond_indent}{{/* {cond_line.strip()}")
+                             new_lines.append(line)
+                             for k in range(i + 1, end_j):
+                                 new_lines.append(lines[k])
+                             new_lines.append(f"{' ' * cond_indent}*/}}")
+                             i = end_j
+                             continue
+                     else:
+                         new_lines.append(f"{' ' * indent}{{/*")
+                         new_lines.append(line)
+                         new_lines.append(f"{' ' * indent}*/}}")
                  else:
                      new_lines.append(line)
                  i += 1
@@ -92,9 +122,25 @@ def comment_out_indent(content, target_starts_with, matching_strings):
                             break
                     
                     if should_comment:
-                        new_lines.append(f"{' ' * indent}{{/*")
-                        new_lines.extend(block_content)
-                        new_lines.append(f"{' ' * indent}*/}}")
+                        if inside_conditional:
+                            # Pop the conditional line and wrap everything
+                            if new_lines and new_lines[-1] == lines[conditional_start_line_idx]:
+                                cond_line = new_lines.pop()
+                                cond_indent = len(cond_line) - len(cond_line.lstrip())
+                                # Find closing )} after block
+                                end_j = j + 1
+                                while end_j < len(lines) and lines[end_j].strip() in [')', ')}', ' )}']:
+                                    block_content.append(lines[end_j])
+                                    end_j += 1
+                                new_lines.append(f"{' ' * cond_indent}{{/* {cond_line.strip()}")
+                                new_lines.extend(block_content)
+                                new_lines.append(f"{' ' * cond_indent}*/}}")
+                                i = end_j
+                                break
+                        else:
+                            new_lines.append(f"{' ' * indent}{{/*")
+                            new_lines.extend(block_content)
+                            new_lines.append(f"{' ' * indent}*/}}")
                     else:
                         new_lines.extend(block_content)
                     
@@ -111,9 +157,25 @@ def comment_out_indent(content, target_starts_with, matching_strings):
                             should_comment = True
                             break
                      if should_comment:
-                        new_lines.append(f"{' ' * indent}{{/*")
-                        new_lines.extend(block_content)
-                        new_lines.append(f"{' ' * indent}*/}}")
+                        if inside_conditional:
+                            # Pop the conditional line and wrap everything
+                            if new_lines and new_lines[-1] == lines[conditional_start_line_idx]:
+                                cond_line = new_lines.pop()
+                                cond_indent = len(cond_line) - len(cond_line.lstrip())
+                                # Find closing )} after block
+                                end_j = j + 1
+                                while end_j < len(lines) and lines[end_j].strip() in [')', ')}', ' )}']:
+                                    block_content.append(lines[end_j])
+                                    end_j += 1
+                                new_lines.append(f"{' ' * cond_indent}{{/* {cond_line.strip()}")
+                                new_lines.extend(block_content)
+                                new_lines.append(f"{' ' * cond_indent}*/}}")
+                                i = end_j
+                                break
+                        else:
+                            new_lines.append(f"{' ' * indent}{{/*")
+                            new_lines.extend(block_content)
+                            new_lines.append(f"{' ' * indent}*/}}")
                      else:
                         new_lines.extend(block_content)
                      i = j + 1
