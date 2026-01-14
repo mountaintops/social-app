@@ -490,28 +490,28 @@ let PostMenuItems = ({
                 />
               </Menu.Item>
             </Menu.Group>
-            <Menu.Divider />
+            {/* <Menu.Divider /> */}
           </>
         )}
 
         <Menu.Group>
           {!hideInPWI || hasSession ? (
             <>
-              <Menu.Item
+              {/* <Menu.Item
                 testID="postDropdownTranslateBtn"
                 label={_(msg`Translate`)}
                 onPress={onPressTranslate}>
                 <Menu.ItemText>{_(msg`Translate`)}</Menu.ItemText>
                 <Menu.ItemIcon icon={Translate} position="right" />
-              </Menu.Item>
+              </Menu.Item> */}
 
-              <Menu.Item
+              {/* <Menu.Item
                 testID="postDropdownCopyTextBtn"
                 label={_(msg`Copy post text`)}
                 onPress={onCopyPostText}>
                 <Menu.ItemText>{_(msg`Copy post text`)}</Menu.ItemText>
                 <Menu.ItemIcon icon={ClipboardIcon} position="right" />
-              </Menu.Item>
+              </Menu.Item> */}
             </>
           ) : (
             <Menu.Item
@@ -526,45 +526,45 @@ let PostMenuItems = ({
 
         {hasSession && feedFeedback.enabled && (
           <>
-            <Menu.Divider />
+            {/* <Menu.Divider /> */}
             <Menu.Group>
-              <Menu.Item
+              {/* <Menu.Item
                 testID="postDropdownShowMoreBtn"
                 label={_(msg`Show more like this`)}
                 onPress={onPressShowMore}>
                 <Menu.ItemText>{_(msg`Show more like this`)}</Menu.ItemText>
                 <Menu.ItemIcon icon={EmojiSmile} position="right" />
-              </Menu.Item>
+              </Menu.Item> */}
 
-              <Menu.Item
+              {/* <Menu.Item
                 testID="postDropdownShowLessBtn"
                 label={_(msg`Show less like this`)}
                 onPress={onPressShowLess}>
                 <Menu.ItemText>{_(msg`Show less like this`)}</Menu.ItemText>
                 <Menu.ItemIcon icon={EmojiSad} position="right" />
-              </Menu.Item>
+              </Menu.Item> */}
             </Menu.Group>
           </>
         )}
 
         {isDiscoverDebugUser && (
           <>
-            <Menu.Divider />
-            <Menu.Item
+            {/* <Menu.Divider /> */}
+            {/* <Menu.Item
               testID="postDropdownReportMisclassificationBtn"
               label={_(msg`Assign topic for algo`)}
               onPress={onReportMisclassification}>
               <Menu.ItemText>{_(msg`Assign topic for algo`)}</Menu.ItemText>
               <Menu.ItemIcon icon={AtomIcon} position="right" />
-            </Menu.Item>
+            </Menu.Item> */}
           </>
         )}
 
         {hasSession && (
           <>
-            <Menu.Divider />
+            {/* <Menu.Divider /> */}
             <Menu.Group>
-              <Menu.Item
+              {/* <Menu.Item
                 testID="postDropdownMuteThreadBtn"
                 label={
                   isThreadMuted ? _(msg`Unmute thread`) : _(msg`Mute thread`)
@@ -577,7 +577,7 @@ let PostMenuItems = ({
                   icon={isThreadMuted ? Unmute : Mute}
                   position="right"
                 />
-              </Menu.Item>
+              </Menu.Item> */}
 
               <Menu.Item
                 testID="postDropdownMuteWordsBtn"
@@ -593,7 +593,7 @@ let PostMenuItems = ({
         {hasSession &&
           (canHideReplyForEveryone || canDetachQuote || canHidePostForMe) && (
             <>
-              <Menu.Divider />
+              {/* <Menu.Divider /> */}
               <Menu.Group>
                 {canHidePostForMe && (
                   <Menu.Item
@@ -674,7 +674,7 @@ let PostMenuItems = ({
 
         {hasSession && (
           <>
-            <Menu.Divider />
+            {/* <Menu.Divider /> */}
             <Menu.Group>
               {!isAuthor && (
                 <>

@@ -198,6 +198,7 @@ export function BottomBar({navigation}: BottomTabBarProps) {
               accessibilityLabel={_(msg`Search`)}
               accessibilityHint=""
             />
+            {/*
             <Btn
               testID="bottomBarMessagesBtn"
               icon={
@@ -230,6 +231,7 @@ export function BottomBar({navigation}: BottomTabBarProps) {
                   : ''
               }
             />
+            */}
             <Btn
               testID="bottomBarNotificationsBtn"
               icon={

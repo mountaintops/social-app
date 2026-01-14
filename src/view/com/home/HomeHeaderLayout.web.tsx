@@ -51,6 +51,7 @@ function HomeHeaderLayoutDesktopAndTablet({
             <View style={[a.flex_1, a.align_center, a.justify_center]}>
               <Logo width={kawaii ? 60 : 28} />
             </View>
+            {/*
             <Link
               to="/feeds"
               hitSlop={10}
@@ -62,6 +63,7 @@ function HomeHeaderLayoutDesktopAndTablet({
               style={[a.justify_center]}>
               <ButtonIcon icon={FeedsIcon} size="lg" />
             </Link>
+            */}
           </View>
         </Layout.Center>
       )}

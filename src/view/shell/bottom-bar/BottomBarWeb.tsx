@@ -116,6 +116,7 @@ export function BottomBarWeb() {
 
           {hasSession && (
             <>
+              {/*
               <NavItem
                 routeName="Messages"
                 href="/messages"
@@ -136,6 +137,7 @@ export function BottomBarWeb() {
                   )
                 }}
               </NavItem>
+              */}
               <NavItem
                 routeName="Notifications"
                 href="/notifications"

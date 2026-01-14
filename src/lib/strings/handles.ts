@@ -2,6 +2,21 @@
 // https://github.com/bluesky-social/indigo/blob/main/atproto/syntax/handle.go#L10
 import {forceLTR} from '#/lib/strings/bidi'
 
+// Strip handle suffix for cleaner display
+export function stripHandleSuffix(handle: string): string {
+  const parts = handle.split('.')
+  return parts[0]
+}
+
+// Add default suffix to a handle if it doesn't have one
+export function ensureHandleSuffix(handle: string): string {
+  if (!handle.includes('.')) {
+    return handle + '.bsky.social'
+  }
+  return handle
+}
+
+
 const VALIDATE_REGEX =
   /^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/
 
@@ -30,7 +45,7 @@ export function sanitizeHandle(
   prefix = '',
   forceLeftToRight = true,
 ): string {
-  const lowercasedWithPrefix = `${prefix}${handle.toLocaleLowerCase()}`
+  const lowercasedWithPrefix = `${prefix}${stripHandleSuffix(handle).toLocaleLowerCase()}`
   return isInvalidHandle(handle)
     ? '⚠Invalid Handle'
     : forceLeftToRight

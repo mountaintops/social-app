@@ -1,52 +1,57 @@
-import {memo, type ReactNode, useCallback, useMemo, useState} from 'react'
-import {View} from 'react-native'
+import { memo, type ReactNode, useCallback, useMemo, useState } from 'react'
+import { View } from 'react-native'
 import {
+  AppBskyEmbedImages,
+  AppBskyEmbedRecordWithMedia,
+  AppBskyEmbedVideo,
   type AppBskyFeedDefs,
   type AppBskyFeedThreadgate,
   AtUri,
   RichText as RichTextAPI,
 } from '@atproto/api'
-import {Trans} from '@lingui/macro'
+import { Trans } from '@lingui/macro'
 
-import {useActorStatus} from '#/lib/actor-status'
-import {MAX_POST_LINES} from '#/lib/constants'
-import {useOpenComposer} from '#/lib/hooks/useOpenComposer'
-import {makeProfileLink} from '#/lib/routes/links'
-import {countLines} from '#/lib/strings/helpers'
+import { useActorStatus } from '#/lib/actor-status'
+import { MAX_POST_LINES } from '#/lib/constants'
+import { useOpenComposer } from '#/lib/hooks/useOpenComposer'
+import { makeProfileLink } from '#/lib/routes/links'
+import { countLines } from '#/lib/strings/helpers'
 import {
   POST_TOMBSTONE,
   type Shadow,
   usePostShadow,
 } from '#/state/cache/post-shadow'
-import {type ThreadItem} from '#/state/queries/usePostThread/types'
-import {useSession} from '#/state/session'
-import {type OnPostSuccessData} from '#/state/shell/composer'
-import {useMergedThreadgateHiddenReplies} from '#/state/threadgate-hidden-replies'
-import {PostMeta} from '#/view/com/util/PostMeta'
-import {PreviewableUserAvatar} from '#/view/com/util/UserAvatar'
+import { type ThreadItem } from '#/state/queries/usePostThread/types'
+import { useSession } from '#/state/session'
+import { type OnPostSuccessData } from '#/state/shell/composer'
+import { useMergedThreadgateHiddenReplies } from '#/state/threadgate-hidden-replies'
+import { PostMeta } from '#/view/com/util/PostMeta'
+import { PreviewableUserAvatar } from '#/view/com/util/UserAvatar'
 import {
   LINEAR_AVI_WIDTH,
   OUTER_SPACE,
   REPLY_LINE_WIDTH,
 } from '#/screens/PostThread/const'
-import {atoms as a, useTheme} from '#/alf'
-import {DebugFieldDisplay} from '#/components/DebugFieldDisplay'
-import {useInteractionState} from '#/components/hooks/useInteractionState'
-import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
-import {LabelsOnMyPost} from '#/components/moderation/LabelsOnMe'
-import {PostAlerts} from '#/components/moderation/PostAlerts'
-import {PostHider} from '#/components/moderation/PostHider'
-import {type AppModerationCause} from '#/components/Pills'
-import {Embed, PostEmbedViewContext} from '#/components/Post/Embed'
-import {ShowMoreTextButton} from '#/components/Post/ShowMoreTextButton'
-import {PostControls, PostControlsSkeleton} from '#/components/PostControls'
-import {RichText} from '#/components/RichText'
+import { atoms as a, useTheme } from '#/alf'
+import { DebugFieldDisplay } from '#/components/DebugFieldDisplay'
+import { useInteractionState } from '#/components/hooks/useInteractionState'
+import { Trash_Stroke2_Corner0_Rounded as TrashIcon } from '#/components/icons/Trash'
+import { LabelsOnMyPost } from '#/components/moderation/LabelsOnMe'
+import { PostAlerts } from '#/components/moderation/PostAlerts'
+import { PostHider } from '#/components/moderation/PostHider'
+import { type AppModerationCause } from '#/components/Pills'
+import { Embed, PostEmbedViewContext } from '#/components/Post/Embed'
+import { ReplyOverlay } from '#/components/ReplyOverlay'
+import { useReplyMediaQuery } from '#/state/queries/reply-media'
+import { ShowMoreTextButton } from '#/components/Post/ShowMoreTextButton'
+import { PostControls, PostControlsSkeleton } from '#/components/PostControls'
+import { RichText } from '#/components/RichText'
 import * as Skele from '#/components/Skeleton'
-import {SubtleHover} from '#/components/SubtleHover'
-import {Text} from '#/components/Typography'
+import { SubtleHover } from '#/components/SubtleHover'
+import { Text } from '#/components/Typography'
 
 export type ThreadItemPostProps = {
-  item: Extract<ThreadItem, {type: 'threadPost'}>
+  item: Extract<ThreadItem, { type: 'threadPost' }>
   overrides?: {
     moderation?: boolean
     topBorder?: boolean
@@ -65,6 +70,18 @@ export function ThreadItemPost({
 
   if (postShadow === POST_TOMBSTONE) {
     return <ThreadItemPostDeleted item={item} overrides={overrides} />
+  }
+
+  // Hide media replies - they're accessible via overlay
+  const embed = item.value.post.embed
+  const hasMedia =
+    AppBskyEmbedImages.isView(embed) ||
+    AppBskyEmbedVideo.isView(embed) ||
+    (AppBskyEmbedRecordWithMedia.isView(embed) &&
+      (AppBskyEmbedImages.isView(embed.media) || AppBskyEmbedVideo.isView(embed.media)))
+
+  if (hasMedia) {
+    return null
   }
 
   return (
@@ -113,7 +130,7 @@ function ThreadItemPostDeleted({
         </Text>
       </View>
 
-      <View style={[{height: 4}]} />
+      <View style={[{ height: 4 }]} />
     </ThreadItemPostOuterWrapper>
   )
 }
@@ -133,12 +150,12 @@ const ThreadItemPostOuterWrapper = memo(function ThreadItemPostOuterWrapper({
     <View
       style={[
         showTopBorder && [a.border_t, t.atoms.border_contrast_low],
-        {paddingHorizontal: OUTER_SPACE},
+        { paddingHorizontal: OUTER_SPACE },
         // If there's no next child, add a little padding to bottom
         !item.ui.showChildReplyLine &&
-          !item.ui.precedesChildReadMore && {
-            paddingBottom: OUTER_SPACE / 2,
-          },
+        !item.ui.precedesChildReadMore && {
+          paddingBottom: OUTER_SPACE / 2,
+        },
       ]}>
       {children}
     </View>
@@ -154,8 +171,8 @@ const ThreadItemPostParentReplyLine = memo(
   }: Pick<ThreadItemPostProps, 'item'>) {
     const t = useTheme()
     return (
-      <View style={[a.flex_row, {height: 12}]}>
-        <View style={{width: LINEAR_AVI_WIDTH}}>
+      <View style={[a.flex_row, { height: 12 }]}>
+        <View style={{ width: LINEAR_AVI_WIDTH }}>
           {item.ui.showParentReplyLine && (
             <View
               style={[
@@ -185,12 +202,13 @@ const ThreadItemPostInner = memo(function ThreadItemPostInner({
   postShadow: Shadow<AppBskyFeedDefs.PostView>
 }) {
   const t = useTheme()
-  const {openComposer} = useOpenComposer()
-  const {currentAccount} = useSession()
+  const { openComposer } = useOpenComposer()
+  const { currentAccount } = useSession()
 
   const post = item.value.post
   const record = item.value.post.record
   const moderation = item.moderation
+  const { data: replyMedia = [] } = useReplyMediaQuery(post.uri)
   const richText = useMemo(
     () =>
       new RichTextAPI({
@@ -216,12 +234,12 @@ const ThreadItemPostInner = memo(function ThreadItemPostInner({
       new AtUri(threadRootUri).host === currentAccount?.did
     return isControlledByViewer && isPostHiddenByThreadgate
       ? [
-          {
-            type: 'reply-hidden',
-            source: {type: 'user', did: currentAccount?.did},
-            priority: 6,
-          },
-        ]
+        {
+          type: 'reply-hidden',
+          source: { type: 'user', did: currentAccount?.did },
+          priority: 6,
+        },
+      ]
       : []
   }, [post, currentAccount?.did, threadgateHiddenReplies, threadRootUri])
 
@@ -244,7 +262,7 @@ const ThreadItemPostInner = memo(function ThreadItemPostInner({
     setLimitLines(false)
   }, [setLimitLines])
 
-  const {isActive: live} = useActorStatus(post.author)
+  const { isActive: live } = useActorStatus(post.author)
 
   return (
     <SubtleHoverWrapper>
@@ -273,18 +291,18 @@ const ThreadItemPostInner = memo(function ThreadItemPostInner({
 
               {(item.ui.showChildReplyLine ||
                 item.ui.precedesChildReadMore) && (
-                <View
-                  style={[
-                    a.mx_auto,
-                    a.mt_xs,
-                    a.flex_1,
-                    {
-                      width: REPLY_LINE_WIDTH,
-                      backgroundColor: t.atoms.border_contrast_low.borderColor,
-                    },
-                  ]}
-                />
-              )}
+                  <View
+                    style={[
+                      a.mx_auto,
+                      a.mt_xs,
+                      a.flex_1,
+                      {
+                        width: REPLY_LINE_WIDTH,
+                        backgroundColor: t.atoms.border_contrast_low.borderColor,
+                      },
+                    ]}
+                  />
+                )}
             </View>
 
             <View style={[a.flex_1]}>
@@ -320,12 +338,13 @@ const ThreadItemPostInner = memo(function ThreadItemPostInner({
                 </>
               ) : undefined}
               {post.embed && (
-                <View style={[a.pb_xs]}>
+                <View style={[a.pb_xs, { position: 'relative' }]}>
                   <Embed
                     embed={post.embed}
                     moderation={moderation}
                     viewContext={PostEmbedViewContext.Feed}
                   />
+                  <ReplyOverlay replies={replyMedia} anchorUri={post.uri} />
                 </View>
               )}
               <PostControls
@@ -345,7 +364,7 @@ const ThreadItemPostInner = memo(function ThreadItemPostInner({
   )
 })
 
-function SubtleHoverWrapper({children}: {children: ReactNode}) {
+function SubtleHoverWrapper({ children }: { children: ReactNode }) {
   const {
     state: hover,
     onIn: onHoverIn,
@@ -362,12 +381,12 @@ function SubtleHoverWrapper({children}: {children: ReactNode}) {
   )
 }
 
-export function ThreadItemPostSkeleton({index}: {index: number}) {
+export function ThreadItemPostSkeleton({ index }: { index: number }) {
   const even = index % 2 === 0
   return (
     <View
       style={[
-        {paddingHorizontal: OUTER_SPACE, paddingVertical: OUTER_SPACE / 1.5},
+        { paddingHorizontal: OUTER_SPACE, paddingVertical: OUTER_SPACE / 1.5 },
         a.gap_md,
       ]}>
       <Skele.Row style={[a.align_start, a.gap_md]}>
@@ -375,18 +394,18 @@ export function ThreadItemPostSkeleton({index}: {index: number}) {
 
         <Skele.Col style={[a.gap_xs]}>
           <Skele.Row style={[a.gap_sm]}>
-            <Skele.Text style={[a.text_md, {width: '20%'}]} />
-            <Skele.Text blend style={[a.text_md, {width: '30%'}]} />
+            <Skele.Text style={[a.text_md, { width: '20%' }]} />
+            <Skele.Text blend style={[a.text_md, { width: '30%' }]} />
           </Skele.Row>
 
           <Skele.Col>
             {even ? (
               <>
-                <Skele.Text blend style={[a.text_md, {width: '100%'}]} />
-                <Skele.Text blend style={[a.text_md, {width: '60%'}]} />
+                <Skele.Text blend style={[a.text_md, { width: '100%' }]} />
+                <Skele.Text blend style={[a.text_md, { width: '60%' }]} />
               </>
             ) : (
-              <Skele.Text blend style={[a.text_md, {width: '60%'}]} />
+              <Skele.Text blend style={[a.text_md, { width: '60%' }]} />
             )}
           </Skele.Col>
 

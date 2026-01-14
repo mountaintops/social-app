@@ -85,12 +85,12 @@ export function DesktopRightNav({routeName}: {routeName: string}) {
 
       {hasSession && (
         <>
-          <DesktopFeeds />
-          <ProgressGuideList />
+          {/* <DesktopFeeds /> */}
+          {/* <ProgressGuideList /> */}
         </>
       )}
 
-      {showTrending && <SidebarTrendingTopics />}
+      {/* {showTrending && <SidebarTrendingTopics />} */}
 
       <Text style={[a.leading_snug, t.atoms.text_contrast_low]}>
         {hasSession && (

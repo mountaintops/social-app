@@ -1,10 +1,10 @@
-import { useQuery } from '@tanstack/react-query'
 import {
     AppBskyEmbedImages,
     AppBskyEmbedRecordWithMedia,
     AppBskyEmbedVideo,
     type AppBskyFeedDefs,
 } from '@atproto/api'
+import { useQuery } from '@tanstack/react-query'
 
 import { useAgent } from '#/state/session'
 
@@ -53,9 +53,11 @@ export function useReplyMediaQuery(postUri: string | undefined) {
                     const post = value.post as AppBskyFeedDefs.PostView | undefined
                     if (!post) continue
 
-                    // Skip the anchor post (depth 0) or by URI match
+                    // Skip only the anchor post - include parents and replies
+                    // Check by URI first (most reliable), then by depth
+                    if (post.uri === postUri) continue
                     const depth = (item as any).depth
-                    if (depth === 0 || post.uri === postUri) continue
+                    if (depth === 0 || depth === undefined) continue
 
                     // Skip duplicates
                     if (repliesWithMedia.some(r => r.uri === post.uri)) continue
@@ -66,7 +68,7 @@ export function useReplyMediaQuery(postUri: string | undefined) {
                     }
                 }
 
-                console.log('[ReplyMediaQuery] Found replies with media:', repliesWithMedia.length)
+                // console.log('[ReplyMediaQuery] Found replies with media:', repliesWithMedia.length)
                 return repliesWithMedia.slice(0, 9) // Max 9
             } catch (error) {
                 console.error('Failed to fetch reply media:', error)

@@ -1,5 +1,5 @@
-import {memo, useCallback, useMemo} from 'react'
-import {type GestureResponderEvent, Text as RNText, View} from 'react-native'
+import { memo, useCallback, useMemo } from 'react'
+import { type GestureResponderEvent, Text as RNText, View } from 'react-native'
 import {
   AppBskyFeedDefs,
   AppBskyFeedPost,
@@ -7,59 +7,61 @@ import {
   AtUri,
   RichText as RichTextAPI,
 } from '@atproto/api'
-import {msg, Plural, Trans} from '@lingui/macro'
-import {useLingui} from '@lingui/react'
+import { msg, Plural, Trans } from '@lingui/macro'
+import { useLingui } from '@lingui/react'
 
-import {useActorStatus} from '#/lib/actor-status'
-import {useOpenComposer} from '#/lib/hooks/useOpenComposer'
-import {useTranslate} from '#/lib/hooks/useTranslate'
-import {makeProfileLink} from '#/lib/routes/links'
-import {sanitizeDisplayName} from '#/lib/strings/display-names'
-import {sanitizeHandle} from '#/lib/strings/handles'
-import {niceDate} from '#/lib/strings/time'
-import {getTranslatorLink, isPostInLanguage} from '#/locale/helpers'
-import {logger} from '#/logger'
+import { useActorStatus } from '#/lib/actor-status'
+import { useOpenComposer } from '#/lib/hooks/useOpenComposer'
+import { useTranslate } from '#/lib/hooks/useTranslate'
+import { makeProfileLink } from '#/lib/routes/links'
+import { sanitizeDisplayName } from '#/lib/strings/display-names'
+import { sanitizeHandle } from '#/lib/strings/handles'
+import { niceDate } from '#/lib/strings/time'
+import { getTranslatorLink, isPostInLanguage } from '#/locale/helpers'
+import { logger } from '#/logger'
 import {
   POST_TOMBSTONE,
   type Shadow,
   usePostShadow,
 } from '#/state/cache/post-shadow'
-import {useProfileShadow} from '#/state/cache/profile-shadow'
-import {FeedFeedbackProvider, useFeedFeedback} from '#/state/feed-feedback'
-import {useLanguagePrefs} from '#/state/preferences'
-import {type ThreadItem} from '#/state/queries/usePostThread/types'
-import {useSession} from '#/state/session'
-import {type OnPostSuccessData} from '#/state/shell/composer'
-import {useMergedThreadgateHiddenReplies} from '#/state/threadgate-hidden-replies'
-import {type PostSource} from '#/state/unstable-post-source'
-import {PreviewableUserAvatar} from '#/view/com/util/UserAvatar'
-import {ThreadItemAnchorFollowButton} from '#/screens/PostThread/components/ThreadItemAnchorFollowButton'
+import { useProfileShadow } from '#/state/cache/profile-shadow'
+import { FeedFeedbackProvider, useFeedFeedback } from '#/state/feed-feedback'
+import { useLanguagePrefs } from '#/state/preferences'
+import { type ThreadItem } from '#/state/queries/usePostThread/types'
+import { useSession } from '#/state/session'
+import { type OnPostSuccessData } from '#/state/shell/composer'
+import { useMergedThreadgateHiddenReplies } from '#/state/threadgate-hidden-replies'
+import { type PostSource } from '#/state/unstable-post-source'
+import { PreviewableUserAvatar } from '#/view/com/util/UserAvatar'
+import { ThreadItemAnchorFollowButton } from '#/screens/PostThread/components/ThreadItemAnchorFollowButton'
 import {
   LINEAR_AVI_WIDTH,
   OUTER_SPACE,
   REPLY_LINE_WIDTH,
 } from '#/screens/PostThread/const'
-import {atoms as a, useTheme} from '#/alf'
-import {colors} from '#/components/Admonition'
-import {Button} from '#/components/Button'
-import {DebugFieldDisplay} from '#/components/DebugFieldDisplay'
-import {CalendarClock_Stroke2_Corner0_Rounded as CalendarClockIcon} from '#/components/icons/CalendarClock'
-import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
-import {InlineLinkText, Link} from '#/components/Link'
-import {ContentHider} from '#/components/moderation/ContentHider'
-import {LabelsOnMyPost} from '#/components/moderation/LabelsOnMe'
-import {PostAlerts} from '#/components/moderation/PostAlerts'
-import {type AppModerationCause} from '#/components/Pills'
-import {Embed, PostEmbedViewContext} from '#/components/Post/Embed'
-import {PostControls, PostControlsSkeleton} from '#/components/PostControls'
-import {useFormatPostStatCount} from '#/components/PostControls/util'
-import {ProfileHoverCard} from '#/components/ProfileHoverCard'
+import { atoms as a, useTheme } from '#/alf'
+import { colors } from '#/components/Admonition'
+import { Button } from '#/components/Button'
+import { DebugFieldDisplay } from '#/components/DebugFieldDisplay'
+import { CalendarClock_Stroke2_Corner0_Rounded as CalendarClockIcon } from '#/components/icons/CalendarClock'
+import { Trash_Stroke2_Corner0_Rounded as TrashIcon } from '#/components/icons/Trash'
+import { InlineLinkText, Link } from '#/components/Link'
+import { ContentHider } from '#/components/moderation/ContentHider'
+import { LabelsOnMyPost } from '#/components/moderation/LabelsOnMe'
+import { PostAlerts } from '#/components/moderation/PostAlerts'
+import { type AppModerationCause } from '#/components/Pills'
+import { Embed, PostEmbedViewContext } from '#/components/Post/Embed'
+import { ReplyOverlay } from '#/components/ReplyOverlay'
+import { useReplyMediaQuery } from '#/state/queries/reply-media'
+import { PostControls, PostControlsSkeleton } from '#/components/PostControls'
+import { useFormatPostStatCount } from '#/components/PostControls/util'
+import { ProfileHoverCard } from '#/components/ProfileHoverCard'
 import * as Prompt from '#/components/Prompt'
-import {RichText} from '#/components/RichText'
+import { RichText } from '#/components/RichText'
 import * as Skele from '#/components/Skeleton'
-import {Text} from '#/components/Typography'
-import {VerificationCheckButton} from '#/components/verification/VerificationCheckButton'
-import {WhoCanReply} from '#/components/WhoCanReply'
+import { Text } from '#/components/Typography'
+import { VerificationCheckButton } from '#/components/verification/VerificationCheckButton'
+import { WhoCanReply } from '#/components/WhoCanReply'
 import * as bsky from '#/types/bsky'
 
 export function ThreadItemAnchor({
@@ -68,7 +70,7 @@ export function ThreadItemAnchor({
   threadgateRecord,
   postSource,
 }: {
-  item: Extract<ThreadItem, {type: 'threadPost'}>
+  item: Extract<ThreadItem, { type: 'threadPost' }>
   onPostSuccess?: (data: OnPostSuccessData) => void
   threadgateRecord?: AppBskyFeedThreadgate.Record
   postSource?: PostSource
@@ -95,7 +97,7 @@ export function ThreadItemAnchor({
   )
 }
 
-function ThreadItemAnchorDeleted({isRoot}: {isRoot: boolean}) {
+function ThreadItemAnchorDeleted({ isRoot }: { isRoot: boolean }) {
   const t = useTheme()
 
   return (
@@ -139,12 +141,12 @@ function ThreadItemAnchorDeleted({isRoot}: {isRoot: boolean}) {
   )
 }
 
-function ThreadItemAnchorParentReplyLine({isRoot}: {isRoot: boolean}) {
+function ThreadItemAnchorParentReplyLine({ isRoot }: { isRoot: boolean }) {
   const t = useTheme()
 
   return !isRoot ? (
-    <View style={[a.pl_lg, a.flex_row, a.pb_xs, {height: a.pt_lg.paddingTop}]}>
-      <View style={{width: 42}}>
+    <View style={[a.pl_lg, a.flex_row, a.pb_xs, { height: a.pt_lg.paddingTop }]}>
+      <View style={{ width: 42 }}>
         <View
           style={[
             {
@@ -169,7 +171,7 @@ const ThreadItemAnchorInner = memo(function ThreadItemAnchorInner({
   threadgateRecord,
   postSource,
 }: {
-  item: Extract<ThreadItem, {type: 'threadPost'}>
+  item: Extract<ThreadItem, { type: 'threadPost' }>
   isRoot: boolean
   postShadow: Shadow<AppBskyFeedDefs.PostView>
   onPostSuccess?: (data: OnPostSuccessData) => void
@@ -177,9 +179,9 @@ const ThreadItemAnchorInner = memo(function ThreadItemAnchorInner({
   postSource?: PostSource
 }) {
   const t = useTheme()
-  const {_} = useLingui()
-  const {openComposer} = useOpenComposer()
-  const {currentAccount, hasSession} = useSession()
+  const { _ } = useLingui()
+  const { openComposer } = useOpenComposer()
+  const { currentAccount, hasSession } = useSession()
   const feedFeedback = useFeedFeedback(postSource?.feedSourceInfo, hasSession)
   const formatPostStatCount = useFormatPostStatCount()
 
@@ -187,7 +189,8 @@ const ThreadItemAnchorInner = memo(function ThreadItemAnchorInner({
   const record = item.value.post.record
   const moderation = item.moderation
   const authorShadow = useProfileShadow(post.author)
-  const {isActive: live} = useActorStatus(post.author)
+  const { isActive: live } = useActorStatus(post.author)
+  const { data: replyMedia = [] } = useReplyMediaQuery(post.uri)
   const richText = useMemo(
     () =>
       new RichTextAPI({
@@ -223,12 +226,12 @@ const ThreadItemAnchorInner = memo(function ThreadItemAnchorInner({
       new AtUri(threadRootUri).host === currentAccount?.did
     return isControlledByViewer && isPostHiddenByThreadgate
       ? [
-          {
-            type: 'reply-hidden',
-            source: {type: 'user', did: currentAccount?.did},
-            priority: 6,
-          },
-        ]
+        {
+          type: 'reply-hidden',
+          source: { type: 'user', did: currentAccount?.did },
+          priority: 6,
+        },
+      ]
       : []
   }, [post, currentAccount?.did, threadgateHiddenReplies, threadRootUri])
   const onlyFollowersCanReply = !!threadgateRecord?.allow?.find(
@@ -359,7 +362,7 @@ const ThreadItemAnchorInner = memo(function ThreadItemAnchorInner({
                     numberOfLines={1}>
                     {sanitizeDisplayName(
                       post.author.displayName ||
-                        sanitizeHandle(post.author.handle),
+                      sanitizeHandle(post.author.handle),
                       moderation.ui('displayName'),
                     )}
                   </Text>
@@ -410,13 +413,14 @@ const ThreadItemAnchorInner = memo(function ThreadItemAnchorInner({
               />
             ) : undefined}
             {post.embed && (
-              <View style={[a.py_xs]}>
+              <View style={[a.py_xs, { position: 'relative' }]}>
                 <Embed
                   embed={post.embed}
                   moderation={moderation}
                   viewContext={PostEmbedViewContext.ThreadHighlighted}
                   onOpen={onOpenEmbed}
                 />
+                <ReplyOverlay replies={replyMedia} anchorUri={post.uri} />
               </View>
             )}
           </ContentHider>
@@ -425,9 +429,9 @@ const ThreadItemAnchorInner = memo(function ThreadItemAnchorInner({
             isThreadAuthor={isThreadAuthor}
           />
           {post.repostCount !== 0 ||
-          post.likeCount !== 0 ||
-          post.quoteCount !== 0 ||
-          post.bookmarkCount !== 0 ? (
+            post.likeCount !== 0 ||
+            post.quoteCount !== 0 ||
+            post.bookmarkCount !== 0 ? (
             // Show this section unless we're *sure* it has no engagement.
             <View
               style={[
@@ -460,7 +464,7 @@ const ThreadItemAnchorInner = memo(function ThreadItemAnchorInner({
                   </Text>
                 </Link>
               ) : null}
-              {post.quoteCount != null &&
+              {/* post.quoteCount != null &&
               post.quoteCount !== 0 &&
               !post.viewer?.embeddingDisabled ? (
                 <Link to={quotesHref} label={_(msg`Quotes of this post`)}>
@@ -477,7 +481,7 @@ const ThreadItemAnchorInner = memo(function ThreadItemAnchorInner({
                     />
                   </Text>
                 </Link>
-              ) : null}
+              ) : null */}
               {post.likeCount != null && post.likeCount !== 0 ? (
                 <Link to={likesHref} label={_(msg`Likes on this post`)}>
                   <Text
@@ -536,11 +540,11 @@ function ExpandedPostDetails({
   post,
   isThreadAuthor,
 }: {
-  post: Extract<ThreadItem, {type: 'threadPost'}>['value']['post']
+  post: Extract<ThreadItem, { type: 'threadPost' }>['value']['post']
   isThreadAuthor: boolean
 }) {
   const t = useTheme()
-  const {_, i18n} = useLingui()
+  const { _, i18n } = useLingui()
   const translate = useTranslate()
   const isRootPost = !('reply' in post.record)
   const langPrefs = useLanguagePrefs()
@@ -549,7 +553,7 @@ function ExpandedPostDetails({
     () =>
       Boolean(
         langPrefs.primaryLanguage &&
-          !isPostInLanguage(post, [langPrefs.primaryLanguage]),
+        !isPostInLanguage(post, [langPrefs.primaryLanguage]),
       ),
     [post, langPrefs.primaryLanguage],
   )
@@ -612,9 +616,9 @@ function ExpandedPostDetails({
   )
 }
 
-function BackdatedPostIndicator({post}: {post: AppBskyFeedDefs.PostView}) {
+function BackdatedPostIndicator({ post }: { post: AppBskyFeedDefs.PostView }) {
   const t = useTheme()
-  const {_, i18n} = useLingui()
+  const { _, i18n } = useLingui()
   const control = Prompt.usePromptControl()
 
   const indexedAt = new Date(post.indexedAt)
@@ -645,7 +649,7 @@ function BackdatedPostIndicator({post}: {post: AppBskyFeedDefs.PostView}) {
           e.stopPropagation()
           control.open()
         }}>
-        {({hovered, pressed}) => (
+        {({ hovered, pressed }) => (
           <View
             style={[
               a.flex_row,
@@ -702,7 +706,7 @@ function BackdatedPostIndicator({post}: {post: AppBskyFeedDefs.PostView}) {
           </Trans>
         </Text>
         <Prompt.Actions>
-          <Prompt.Action cta={_(msg`Okay`)} onPress={() => {}} />
+          <Prompt.Action cta={_(msg`Okay`)} onPress={() => { }} />
         </Prompt.Actions>
       </Prompt.Outer>
     </>
@@ -730,17 +734,17 @@ export function ThreadItemAnchorSkeleton() {
         <Skele.Circle size={42} />
 
         <Skele.Col>
-          <Skele.Text style={[a.text_lg, {width: '20%'}]} />
-          <Skele.Text blend style={[a.text_md, {width: '40%'}]} />
+          <Skele.Text style={[a.text_lg, { width: '20%' }]} />
+          <Skele.Text blend style={[a.text_md, { width: '40%' }]} />
         </Skele.Col>
       </Skele.Row>
 
       <View>
-        <Skele.Text style={[a.text_xl, {width: '100%'}]} />
-        <Skele.Text style={[a.text_xl, {width: '60%'}]} />
+        <Skele.Text style={[a.text_xl, { width: '100%' }]} />
+        <Skele.Text style={[a.text_xl, { width: '60%' }]} />
       </View>
 
-      <Skele.Text style={[a.text_sm, {width: '50%'}]} />
+      <Skele.Text style={[a.text_sm, { width: '50%' }]} />
 
       <PostControlsSkeleton big />
     </View>

@@ -6,6 +6,7 @@ import {
 } from '@tanstack/react-query'
 
 import {STALE} from '#/state/queries'
+import {ensureHandleSuffix} from '#/lib/strings/handles'
 import {useAgent} from '#/state/session'
 import {useUnstableProfileViewCache} from './profile'
 
@@ -39,7 +40,9 @@ export function useResolveDidQuery(didOrHandle: string | undefined) {
       // Just return the did if it's already one
       if (didOrHandle.startsWith('did:')) return didOrHandle
 
-      const res = await agent.resolveHandle({handle: didOrHandle})
+      // Add default suffix if handle has no dot
+      const handleToResolve = ensureHandleSuffix(didOrHandle)
+      const res = await agent.resolveHandle({handle: handleToResolve})
       return res.data.did
     },
     initialData: () => {

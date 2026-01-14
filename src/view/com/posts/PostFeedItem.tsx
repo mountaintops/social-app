@@ -1,5 +1,5 @@
-import {memo, useCallback, useMemo, useState} from 'react'
-import {StyleSheet, View} from 'react-native'
+import { memo, useCallback, useMemo, useState } from 'react'
+import { StyleSheet, View } from 'react-native'
 import {
   type AppBskyActorDefs,
   AppBskyFeedDefs,
@@ -9,60 +9,62 @@ import {
   type ModerationDecision,
   RichText as RichTextAPI,
 } from '@atproto/api'
-import {useNavigation} from '@react-navigation/native'
-import {useQueryClient} from '@tanstack/react-query'
+import { useNavigation } from '@react-navigation/native'
+import { useQueryClient } from '@tanstack/react-query'
 
-import {useActorStatus} from '#/lib/actor-status'
-import {type ReasonFeedSource} from '#/lib/api/feed/types'
-import {MAX_POST_LINES} from '#/lib/constants'
-import {useOpenComposer} from '#/lib/hooks/useOpenComposer'
-import {usePalette} from '#/lib/hooks/usePalette'
-import {makeProfileLink} from '#/lib/routes/links'
-import {type NavigationProp} from '#/lib/routes/types'
-import {useGate} from '#/lib/statsig/statsig'
-import {countLines} from '#/lib/strings/helpers'
-import {logger} from '#/logger'
+import { useActorStatus } from '#/lib/actor-status'
+import { type ReasonFeedSource } from '#/lib/api/feed/types'
+import { MAX_POST_LINES } from '#/lib/constants'
+import { useOpenComposer } from '#/lib/hooks/useOpenComposer'
+import { usePalette } from '#/lib/hooks/usePalette'
+import { makeProfileLink } from '#/lib/routes/links'
+import { type NavigationProp } from '#/lib/routes/types'
+import { useGate } from '#/lib/statsig/statsig'
+import { countLines } from '#/lib/strings/helpers'
+import { logger } from '#/logger'
 import {
   POST_TOMBSTONE,
   type Shadow,
   usePostShadow,
 } from '#/state/cache/post-shadow'
-import {useFeedFeedbackContext} from '#/state/feed-feedback'
-import {unstableCacheProfileView} from '#/state/queries/profile'
-import {useSession} from '#/state/session'
-import {useMergedThreadgateHiddenReplies} from '#/state/threadgate-hidden-replies'
+import { useFeedFeedbackContext } from '#/state/feed-feedback'
+import { unstableCacheProfileView } from '#/state/queries/profile'
+import { useSession } from '#/state/session'
+import { useMergedThreadgateHiddenReplies } from '#/state/threadgate-hidden-replies'
 import {
   buildPostSourceKey,
   setUnstablePostSource,
 } from '#/state/unstable-post-source'
-import {Link} from '#/view/com/util/Link'
-import {PostMeta} from '#/view/com/util/PostMeta'
-import {PreviewableUserAvatar} from '#/view/com/util/UserAvatar'
-import {atoms as a} from '#/alf'
-import {ContentHider} from '#/components/moderation/ContentHider'
-import {LabelsOnMyPost} from '#/components/moderation/LabelsOnMe'
-import {PostAlerts} from '#/components/moderation/PostAlerts'
-import {type AppModerationCause} from '#/components/Pills'
-import {Embed} from '#/components/Post/Embed'
-import {PostEmbedViewContext} from '#/components/Post/Embed/types'
-import {PostRepliedTo} from '#/components/Post/PostRepliedTo'
-import {ShowMoreTextButton} from '#/components/Post/ShowMoreTextButton'
-import {PostControls} from '#/components/PostControls'
-import {DiscoverDebug} from '#/components/PostControls/DiscoverDebug'
-import {RichText} from '#/components/RichText'
-import {SubtleHover} from '#/components/SubtleHover'
-import {ENV} from '#/env'
+import { Link } from '#/view/com/util/Link'
+import { PostMeta } from '#/view/com/util/PostMeta'
+import { PreviewableUserAvatar } from '#/view/com/util/UserAvatar'
+import { atoms as a } from '#/alf'
+import { ContentHider } from '#/components/moderation/ContentHider'
+import { LabelsOnMyPost } from '#/components/moderation/LabelsOnMe'
+import { PostAlerts } from '#/components/moderation/PostAlerts'
+import { type AppModerationCause } from '#/components/Pills'
+import { Embed } from '#/components/Post/Embed'
+import { PostEmbedViewContext } from '#/components/Post/Embed/types'
+import { PostRepliedTo } from '#/components/Post/PostRepliedTo'
+import { ShowMoreTextButton } from '#/components/Post/ShowMoreTextButton'
+import { PostControls } from '#/components/PostControls'
+import { DiscoverDebug } from '#/components/PostControls/DiscoverDebug'
+import { RichText } from '#/components/RichText'
+import { ReplyOverlay } from '#/components/ReplyOverlay'
+import { useReplyMediaQuery } from '#/state/queries/reply-media'
+import { SubtleHover } from '#/components/SubtleHover'
+import { ENV } from '#/env'
 import * as bsky from '#/types/bsky'
-import {PostFeedReason} from './PostFeedReason'
+import { PostFeedReason } from './PostFeedReason'
 
 interface FeedItemProps {
   record: AppBskyFeedPost.Record
   reason:
-    | AppBskyFeedDefs.ReasonRepost
-    | AppBskyFeedDefs.ReasonPin
-    | ReasonFeedSource
-    | {[k: string]: unknown; $type: string}
-    | undefined
+  | AppBskyFeedDefs.ReasonRepost
+  | AppBskyFeedDefs.ReasonPin
+  | ReasonFeedSource
+  | { [k: string]: unknown; $type: string }
+  | undefined
   moderation: ModerationDecision
   parentAuthor: AppBskyActorDefs.ProfileViewBasic | undefined
   showReplyTo: boolean
@@ -163,10 +165,11 @@ let FeedItemInner = ({
   onShowLess?: (interaction: AppBskyFeedDefs.Interaction) => void
 }): React.ReactNode => {
   const queryClient = useQueryClient()
-  const {openComposer} = useOpenComposer()
+  const { openComposer } = useOpenComposer()
   const navigation = useNavigation<NavigationProp>()
   const pal = usePalette('default')
   const gate = useGate()
+  const { data: replyMedia = [] } = useReplyMediaQuery(post.uri)
 
   const [hover, setHover] = useState(false)
 
@@ -174,7 +177,7 @@ let FeedItemInner = ({
     const urip = new AtUri(post.uri)
     return [makeProfileLink(post.author, 'post', urip.rkey), urip.rkey]
   }, [post.uri, post.author])
-  const {sendInteraction, feedSourceInfo, feedDescriptor} =
+  const { sendInteraction, feedSourceInfo, feedDescriptor } =
     useFeedFeedbackContext()
 
   const onPressReply = () => {
@@ -292,7 +295,7 @@ let FeedItemInner = ({
     ? rootPost.threadgate.record
     : undefined
 
-  const {isActive: live} = useActorStatus(post.author)
+  const { isActive: live } = useActorStatus(post.author)
 
   const viaRepost = useMemo(() => {
     if (AppBskyFeedDefs.isReasonRepost(reason) && reason.uri && reason.cid) {
@@ -311,7 +314,7 @@ let FeedItemInner = ({
       noFeedback
       accessible={false}
       onBeforePress={onBeforePress}
-      dataSet={{feedContext}}
+      dataSet={{ feedContext }}
       onPointerEnter={() => {
         setHover(true)
       }}
@@ -319,8 +322,8 @@ let FeedItemInner = ({
         setHover(false)
       }}>
       <SubtleHover hover={hover} />
-      <View style={{flexDirection: 'row', gap: 10, paddingLeft: 8}}>
-        <View style={{width: 42}}>
+      <View style={{ flexDirection: 'row', gap: 10, paddingLeft: 8 }}>
+        <View style={{ width: 42 }}>
           {isThreadChild && (
             <View
               style={[
@@ -370,13 +373,13 @@ let FeedItemInner = ({
           )}
         </View>
         <View style={styles.layoutContent}>
-          <PostMeta
+          {/* <PostMeta
             author={post.author}
             moderation={moderation}
             timestamp={post.indexedAt}
             postHref={href}
             onOpenAuthor={onOpenAuthor}
-          />
+          /> */}
           {showReplyTo &&
             (parentAuthor || isParentBlocked || isParentNotFound) && (
               <PostRepliedTo
@@ -386,15 +389,19 @@ let FeedItemInner = ({
               />
             )}
           <LabelsOnMyPost post={post} />
-          <PostContent
-            moderation={moderation}
-            richText={richText}
-            postEmbed={post.embed}
-            postAuthor={post.author}
-            onOpenEmbed={onOpenEmbed}
-            post={post}
-            threadgateRecord={threadgateRecord}
-          />
+          <View style={{ position: 'relative' }}>
+            <PostContent
+              moderation={moderation}
+              richText={richText}
+              postEmbed={post.embed}
+              postAuthor={post.author}
+              onOpenEmbed={onOpenEmbed}
+              post={post}
+              threadgateRecord={threadgateRecord}
+            />
+            {/* Reply media overlays */}
+            <ReplyOverlay replies={replyMedia} anchorUri={post.uri} />
+          </View>
           <PostControls
             post={post}
             record={record}
@@ -433,7 +440,7 @@ let PostContent = ({
   post: AppBskyFeedDefs.PostView
   threadgateRecord?: AppBskyFeedThreadgate.Record
 }): React.ReactNode => {
-  const {currentAccount} = useSession()
+  const { currentAccount } = useSession()
   const [limitLines, setLimitLines] = useState(
     () => countLines(richText.text) >= MAX_POST_LINES,
   )
@@ -452,12 +459,12 @@ let PostContent = ({
       rootPostUri && new AtUri(rootPostUri).host === currentAccount?.did
     return isControlledByViewer && isPostHiddenByThreadgate
       ? [
-          {
-            type: 'reply-hidden',
-            source: {type: 'user', did: currentAccount?.did},
-            priority: 6,
-          },
-        ]
+        {
+          type: 'reply-hidden',
+          source: { type: 'user', did: currentAccount?.did },
+          priority: 6,
+        },
+      ]
       : []
   }, [post, currentAccount?.did, threadgateHiddenReplies])
 

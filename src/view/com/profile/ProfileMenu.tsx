@@ -280,7 +280,7 @@ let ProfileMenu = ({
 
           {hasSession && (
             <>
-              <Menu.Divider />
+              {/* <Menu.Divider /> */}
               <Menu.Group>
                 {!isSelf && (
                   <>
@@ -309,7 +309,7 @@ let ProfileMenu = ({
                     )}
                   </>
                 )}
-                <Menu.Item
+                {/* <Menu.Item
                   testID="profileHeaderDropdownStarterPackAddRemoveBtn"
                   label={_(msg`Add to starter packs`)}
                   onPress={onPressAddToStarterPacks}>
@@ -317,8 +317,8 @@ let ProfileMenu = ({
                     <Trans>Add to starter packs</Trans>
                   </Menu.ItemText>
                   <Menu.ItemIcon icon={StarterPack} />
-                </Menu.Item>
-                <Menu.Item
+                </Menu.Item> */}
+                {/* <Menu.Item
                   testID="profileHeaderDropdownListAddRemoveBtn"
                   label={_(msg`Add to lists`)}
                   onPress={onPressAddRemoveLists}>
@@ -326,9 +326,9 @@ let ProfileMenu = ({
                     <Trans>Add to lists</Trans>
                   </Menu.ItemText>
                   <Menu.ItemIcon icon={List} />
-                </Menu.Item>
+                </Menu.Item> */}
                 {isSelf && canGoLive && (
-                  <Menu.Item
+                  {/* <Menu.Item
                     testID="profileHeaderDropdownListAddRemoveBtn"
                     label={
                       status.isDisabled
@@ -352,7 +352,7 @@ let ProfileMenu = ({
                       )}
                     </Menu.ItemText>
                     <Menu.ItemIcon icon={LiveIcon} />
-                  </Menu.Item>
+                  </Menu.Item> */}
                 )}
                 {verification.viewer.role === 'verifier' &&
                   !verification.profile.isViewer &&
@@ -440,7 +440,7 @@ let ProfileMenu = ({
           )}
           {devModeEnabled ? (
             <>
-              <Menu.Divider />
+              {/* <Menu.Divider /> */}
               <Menu.Group>
                 <Menu.Item
                   testID="profileHeaderDropdownShareATURIBtn"

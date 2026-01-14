@@ -55,38 +55,38 @@ export function ContentAndMediaSettingsScreen({}: Props) {
       </Layout.Header.Outer>
       <Layout.Content>
         <SettingsList.Container>
-          <SettingsList.LinkItem
+          {/* <SettingsList.LinkItem
             to="/settings/saved-feeds"
             label={_(msg`Manage saved feeds`)}>
             <SettingsList.ItemIcon icon={HashtagIcon} />
             <SettingsList.ItemText>
               <Trans>Manage saved feeds</Trans>
             </SettingsList.ItemText>
-          </SettingsList.LinkItem>
-          <SettingsList.LinkItem
+          </SettingsList.LinkItem> */}
+          {/* <SettingsList.LinkItem
             to="/settings/threads"
             label={_(msg`Thread preferences`)}>
             <SettingsList.ItemIcon icon={BubblesIcon} />
             <SettingsList.ItemText>
               <Trans>Thread preferences</Trans>
             </SettingsList.ItemText>
-          </SettingsList.LinkItem>
-          <SettingsList.LinkItem
+          </SettingsList.LinkItem> */}
+          {/* <SettingsList.LinkItem
             to="/settings/following-feed"
             label={_(msg`Following feed preferences`)}>
             <SettingsList.ItemIcon icon={HomeIcon} />
             <SettingsList.ItemText>
               <Trans>Following feed preferences</Trans>
             </SettingsList.ItemText>
-          </SettingsList.LinkItem>
-          <SettingsList.LinkItem
+          </SettingsList.LinkItem> */}
+          {/* <SettingsList.LinkItem
             to="/settings/external-embeds"
             label={_(msg`External media`)}>
             <SettingsList.ItemIcon icon={MacintoshIcon} />
             <SettingsList.ItemText>
               <Trans>External media</Trans>
             </SettingsList.ItemText>
-          </SettingsList.LinkItem>
+          </SettingsList.LinkItem> */}
           <SettingsList.LinkItem
             to="/settings/interests"
             label={_(msg`Your interests`)}>

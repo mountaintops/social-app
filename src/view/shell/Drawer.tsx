@@ -11,7 +11,7 @@ import {type PressableScale} from '#/lib/custom-animations/PressableScale'
 import {useNavigationTabState} from '#/lib/hooks/useNavigationTabState'
 import {getTabState, TabState} from '#/lib/routes/helpers'
 import {type NavigationProp} from '#/lib/routes/types'
-import {sanitizeHandle} from '#/lib/strings/handles'
+import {sanitizeHandle, stripHandleSuffix} from '#/lib/strings/handles'
 import {colors} from '#/lib/styles'
 import {isWeb} from '#/platform/detection'
 import {emitSoftReset} from '#/state/events'
@@ -92,7 +92,7 @@ let DrawerProfileCard = ({
             emoji
             style={[a.font_bold, a.text_xl, a.mt_2xs, a.leading_tight]}
             numberOfLines={1}>
-            {profile?.displayName || account.handle}
+            {profile?.displayName || stripHandleSuffix(account.handle)}
           </Text>
           {verification.showBadge && (
             <View
@@ -292,13 +292,13 @@ let DrawerContent = ({}: React.PropsWithoutRef<{}>): React.ReactNode => {
           <>
             <SearchMenuItem isActive={isAtSearch} onPress={onPressSearch} />
             <HomeMenuItem isActive={isAtHome} onPress={onPressHome} />
-            <ChatMenuItem isActive={isAtMessages} onPress={onPressMessages} />
+            {/* <ChatMenuItem isActive={isAtMessages} onPress={onPressMessages} /> */}
             <NotificationsMenuItem
               isActive={isAtNotifications}
               onPress={onPressNotifications}
             />
-            <FeedsMenuItem isActive={isAtFeeds} onPress={onPressMyFeeds} />
-            <ListsMenuItem onPress={onPressLists} />
+            {/* <FeedsMenuItem isActive={isAtFeeds} onPress={onPressMyFeeds} /> */}
+            {/* <ListsMenuItem onPress={onPressLists} /> */}
             <BookmarksMenuItem
               isActive={isAtBookmarks}
               onPress={onPressBookmarks}
@@ -312,7 +312,7 @@ let DrawerContent = ({}: React.PropsWithoutRef<{}>): React.ReactNode => {
         ) : (
           <>
             <HomeMenuItem isActive={isAtHome} onPress={onPressHome} />
-            <FeedsMenuItem isActive={isAtFeeds} onPress={onPressMyFeeds} />
+            {/* <FeedsMenuItem isActive={isAtFeeds} onPress={onPressMyFeeds} /> */}
             <SearchMenuItem isActive={isAtSearch} onPress={onPressSearch} />
           </>
         )}

@@ -11,12 +11,13 @@ import { useNavigation } from '@react-navigation/native'
 
 import { makeProfileLink } from '#/lib/routes/links'
 import { type NavigationProp } from '#/lib/routes/types'
-import { atoms as a, useTheme } from '#/alf'
+import { useTheme } from '#/alf'
 
 const MAX_OVERLAYS = 9
 
 interface ReplyOverlayProps {
     replies: AppBskyFeedDefs.PostView[]
+    anchorUri?: string // URI of the main post to filter out
 }
 
 function getMediaUrl(post: AppBskyFeedDefs.PostView): string | null {
@@ -48,7 +49,7 @@ function getMediaUrl(post: AppBskyFeedDefs.PostView): string | null {
     return null
 }
 
-let ReplyOverlay = ({ replies }: ReplyOverlayProps): React.ReactNode => {
+let ReplyOverlay = ({ replies, anchorUri }: ReplyOverlayProps): React.ReactNode => {
     const t = useTheme()
     const navigation = useNavigation<NavigationProp>()
 
@@ -60,42 +61,46 @@ let ReplyOverlay = ({ replies }: ReplyOverlayProps): React.ReactNode => {
                 if (!reply.uri || typeof reply.uri !== 'string') return false
                 if (!reply.author || typeof reply.author !== 'object') return false
                 if (!reply.author.handle || typeof reply.author.handle !== 'string') return false
+                // Filter out anchor post (the main post itself)
+                if (anchorUri && reply.uri === anchorUri) {
+                    // console.log('[ReplyOverlay] Filtered out anchor:', reply.uri)
+                    return false
+                }
                 // Check for media
                 return getMediaUrl(reply) !== null
             })
             .slice(0, MAX_OVERLAYS)
-    }, [replies])
-
-    // Debug logging
-    console.log('[ReplyOverlay] Received replies:', replies.length, 'Media replies:', mediaReplies.length)
+    }, [replies, anchorUri])
 
     if (mediaReplies.length === 0) {
         return null
     }
 
     const handlePress = (post: AppBskyFeedDefs.PostView) => {
-        const href = makeProfileLink(post.author, 'post', post.uri.split('/').pop())
+        // const href = makeProfileLink(post.author, 'post', post.uri.split('/').pop())
         navigation.push('PostThread', { name: post.author.handle, rkey: post.uri.split('/').pop() })
     }
 
     // Layout: 3 or less = vertical, 4+ = grid (2 columns)
     const isGrid = mediaReplies.length >= 4
     const columns = 2 // Always 2 columns for grid
+    const itemSize = 50
+    const gap = 4
+    const gridWidth = (itemSize * columns) + (gap * (columns - 1)) + 8 // items + gaps + padding
 
     return (
         <View style={[styles.container]}>
             <View
                 style={[
                     styles.overlayContainer,
-                    isGrid ? styles.gridContainer : styles.verticalContainer,
-                    isGrid && { width: columns * 54 },
+                    isGrid ? [styles.gridContainer, { width: gridWidth }] : styles.verticalContainer,
                 ]}>
-                {mediaReplies.map((reply, index) => {
+                {mediaReplies.map((reply) => {
                     const mediaUrl = getMediaUrl(reply)
                     if (!mediaUrl) return null
 
                     return (
-                        <Pressable
+                        <Pressable accessibilityRole="button"
                             key={reply.uri}
                             onPress={() => handlePress(reply)}
                             style={[
@@ -108,6 +113,7 @@ let ReplyOverlay = ({ replies }: ReplyOverlayProps): React.ReactNode => {
                                 source={{ uri: mediaUrl }}
                                 style={styles.thumbnailImage}
                                 contentFit="cover"
+                                accessibilityIgnoresInvertColors
                             />
                         </Pressable>
                     )

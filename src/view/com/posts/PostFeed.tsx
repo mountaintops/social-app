@@ -22,24 +22,27 @@ import {
   type AppBskyActorDefs,
   AppBskyEmbedVideo,
   type AppBskyFeedDefs,
-} from '@atproto/api'
-import {msg} from '@lingui/macro'
-import {useLingui} from '@lingui/react'
-import {useQueryClient} from '@tanstack/react-query'
 
-import {isStatusStillActive, validateStatus} from '#/lib/actor-status'
-import {DISCOVER_FEED_URI, KNOWN_SHUTDOWN_FEEDS} from '#/lib/constants'
-import {useInitialNumToRender} from '#/lib/hooks/useInitialNumToRender'
-import {useNonReactiveCallback} from '#/lib/hooks/useNonReactiveCallback'
-import {logEvent, useGate} from '#/lib/statsig/statsig'
-import {isNetworkError} from '#/lib/strings/errors'
-import {logger} from '#/logger'
-import {isIOS, isNative, isWeb} from '#/platform/detection'
-import {usePostAuthorShadowFilter} from '#/state/cache/profile-shadow'
-import {listenPostCreated} from '#/state/events'
-import {useFeedFeedbackContext} from '#/state/feed-feedback'
-import {useTrendingSettings} from '#/state/preferences/trending'
-import {STALE} from '#/state/queries'
+  AppBskyEmbedImages,
+  AppBskyEmbedRecordWithMedia
+} from '@atproto/api'
+import { msg } from '@lingui/macro'
+import { useLingui } from '@lingui/react'
+import { useQueryClient } from '@tanstack/react-query'
+
+import { isStatusStillActive, validateStatus } from '#/lib/actor-status'
+import { DISCOVER_FEED_URI, KNOWN_SHUTDOWN_FEEDS } from '#/lib/constants'
+import { useInitialNumToRender } from '#/lib/hooks/useInitialNumToRender'
+import { useNonReactiveCallback } from '#/lib/hooks/useNonReactiveCallback'
+import { logEvent, useGate } from '#/lib/statsig/statsig'
+import { isNetworkError } from '#/lib/strings/errors'
+import { logger } from '#/logger'
+import { isIOS, isNative, isWeb } from '#/platform/detection'
+import { usePostAuthorShadowFilter } from '#/state/cache/profile-shadow'
+import { listenPostCreated } from '#/state/events'
+import { useFeedFeedbackContext } from '#/state/feed-feedback'
+import { useTrendingSettings } from '#/state/preferences/trending'
+import { STALE } from '#/state/queries'
 import {
   type AuthorFilter,
   type FeedDescriptor,
@@ -50,111 +53,111 @@ import {
   RQKEY,
   usePostFeedQuery,
 } from '#/state/queries/post-feed'
-import {useLiveNowConfig} from '#/state/service-config'
-import {useSession} from '#/state/session'
-import {useProgressGuide} from '#/state/shell/progress-guide'
-import {useSelectedFeed} from '#/state/shell/selected-feed'
-import {List, type ListRef} from '#/view/com/util/List'
-import {PostFeedLoadingPlaceholder} from '#/view/com/util/LoadingPlaceholder'
-import {LoadMoreRetryBtn} from '#/view/com/util/LoadMoreRetryBtn'
-import {type VideoFeedSourceContext} from '#/screens/VideoFeed/types'
-import {useBreakpoints, useLayoutBreakpoints} from '#/alf'
+import { useLiveNowConfig } from '#/state/service-config'
+import { useSession } from '#/state/session'
+import { useProgressGuide } from '#/state/shell/progress-guide'
+import { useSelectedFeed } from '#/state/shell/selected-feed'
+import { List, type ListRef } from '#/view/com/util/List'
+import { PostFeedLoadingPlaceholder } from '#/view/com/util/LoadingPlaceholder'
+import { LoadMoreRetryBtn } from '#/view/com/util/LoadMoreRetryBtn'
+import { type VideoFeedSourceContext } from '#/screens/VideoFeed/types'
+import { useBreakpoints, useLayoutBreakpoints } from '#/alf'
 import {
   AgeAssuranceDismissibleFeedBanner,
   useInternalState as useAgeAssuranceBannerState,
 } from '#/components/ageAssurance/AgeAssuranceDismissibleFeedBanner'
-import {ProgressGuide, SuggestedFollows} from '#/components/FeedInterstitials'
+import { ProgressGuide, SuggestedFollows } from '#/components/FeedInterstitials'
 import {
   PostFeedVideoGridRow,
   PostFeedVideoGridRowPlaceholder,
 } from '#/components/feeds/PostFeedVideoGridRow'
-import {TrendingInterstitial} from '#/components/interstitials/Trending'
-import {TrendingVideos as TrendingVideosInterstitial} from '#/components/interstitials/TrendingVideos'
-import {ComposerPrompt} from '../feeds/ComposerPrompt'
-import {DiscoverFallbackHeader} from './DiscoverFallbackHeader'
-import {FeedShutdownMsg} from './FeedShutdownMsg'
-import {PostFeedErrorMessage} from './PostFeedErrorMessage'
-import {PostFeedItem} from './PostFeedItem'
-import {ShowLessFollowup} from './ShowLessFollowup'
-import {ViewFullThread} from './ViewFullThread'
+import { TrendingInterstitial } from '#/components/interstitials/Trending'
+import { TrendingVideos as TrendingVideosInterstitial } from '#/components/interstitials/TrendingVideos'
+import { ComposerPrompt } from '../feeds/ComposerPrompt'
+import { DiscoverFallbackHeader } from './DiscoverFallbackHeader'
+import { FeedShutdownMsg } from './FeedShutdownMsg'
+import { PostFeedErrorMessage } from './PostFeedErrorMessage'
+import { PostFeedItem } from './PostFeedItem'
+import { ShowLessFollowup } from './ShowLessFollowup'
+import { ViewFullThread } from './ViewFullThread'
 
 type FeedRow =
   | {
-      type: 'loading'
-      key: string
-    }
+    type: 'loading'
+    key: string
+  }
   | {
-      type: 'empty'
-      key: string
-    }
+    type: 'empty'
+    key: string
+  }
   | {
-      type: 'error'
-      key: string
-    }
+    type: 'error'
+    key: string
+  }
   | {
-      type: 'loadMoreError'
-      key: string
-    }
+    type: 'loadMoreError'
+    key: string
+  }
   | {
-      type: 'feedShutdownMsg'
-      key: string
-    }
+    type: 'feedShutdownMsg'
+    key: string
+  }
   | {
-      type: 'fallbackMarker'
-      key: string
-    }
+    type: 'fallbackMarker'
+    key: string
+  }
   | {
-      type: 'sliceItem'
-      key: string
-      slice: FeedPostSlice
-      indexInSlice: number
-      showReplyTo: boolean
-    }
+    type: 'sliceItem'
+    key: string
+    slice: FeedPostSlice
+    indexInSlice: number
+    showReplyTo: boolean
+  }
   | {
-      type: 'videoGridRowPlaceholder'
-      key: string
-    }
+    type: 'videoGridRowPlaceholder'
+    key: string
+  }
   | {
-      type: 'videoGridRow'
-      key: string
-      items: FeedPostSliceItem[]
-      sourceFeedUri: string
-      feedContexts: (string | undefined)[]
-      reqIds: (string | undefined)[]
-    }
+    type: 'videoGridRow'
+    key: string
+    items: FeedPostSliceItem[]
+    sourceFeedUri: string
+    feedContexts: (string | undefined)[]
+    reqIds: (string | undefined)[]
+  }
   | {
-      type: 'sliceViewFullThread'
-      key: string
-      uri: string
-    }
+    type: 'sliceViewFullThread'
+    key: string
+    uri: string
+  }
   | {
-      type: 'interstitialFollows'
-      key: string
-    }
+    type: 'interstitialFollows'
+    key: string
+  }
   | {
-      type: 'interstitialProgressGuide'
-      key: string
-    }
+    type: 'interstitialProgressGuide'
+    key: string
+  }
   | {
-      type: 'interstitialTrending'
-      key: string
-    }
+    type: 'interstitialTrending'
+    key: string
+  }
   | {
-      type: 'interstitialTrendingVideos'
-      key: string
-    }
+    type: 'interstitialTrendingVideos'
+    key: string
+  }
   | {
-      type: 'showLessFollowup'
-      key: string
-    }
+    type: 'showLessFollowup'
+    key: string
+  }
   | {
-      type: 'ageAssuranceBanner'
-      key: string
-    }
+    type: 'ageAssuranceBanner'
+    key: string
+  }
   | {
-      type: 'composerPrompt'
-      key: string
-    }
+    type: 'composerPrompt'
+    key: string
+  }
 
 export function getItemsForFeedback(feedRow: FeedRow): {
   item: FeedPostSliceItem
@@ -227,17 +230,17 @@ let PostFeed = ({
   initialNumToRender?: number
   isVideoFeed?: boolean
 }): React.ReactNode => {
-  const {_} = useLingui()
+  const { _ } = useLingui()
   const queryClient = useQueryClient()
-  const {currentAccount, hasSession} = useSession()
+  const { currentAccount, hasSession } = useSession()
   const gate = useGate()
   const initialNumToRender = useInitialNumToRender()
   const feedFeedback = useFeedFeedbackContext()
   const [isPTRing, setIsPTRing] = useState(false)
   const lastFetchRef = useRef<number>(Date.now())
   const [feedType, feedUriOrActorDid, feedTab] = feed.split('|')
-  const {gtMobile} = useBreakpoints()
-  const {rightNavVisible} = useLayoutBreakpoints()
+  const { gtMobile } = useBreakpoints()
+  const { rightNavVisible } = useLayoutBreakpoints()
   const areVideoFeedsEnabled = isNative
 
   const [hasPressedShowLessUris, setHasPressedShowLessUris] = useState(
@@ -256,7 +259,7 @@ let PostFeed = ({
 
   const feedCacheKey = feedParams?.feedCacheKey
   const opts = useMemo(
-    () => ({enabled, ignoreFilterFor}),
+    () => ({ enabled, ignoreFilterFor }),
     [enabled, ignoreFilterFor],
   )
   const {
@@ -299,7 +302,7 @@ let PostFeed = ({
       }
     } catch (e) {
       if (!isNetworkError(e)) {
-        logger.error('Poll latest failed', {feed, message: String(e)})
+        logger.error('Poll latest failed', { feed, message: String(e) })
       }
     }
   })
@@ -315,7 +318,7 @@ let PostFeed = ({
       (feed === 'following' ||
         feed === `author|${myDid}|posts_and_author_threads`)
     ) {
-      queryClient.invalidateQueries({queryKey: RQKEY(feed)})
+      queryClient.invalidateQueries({ queryKey: RQKEY(feed) })
     }
   }, [queryClient, feed, data, myDid])
   useEffect(() => {
@@ -360,7 +363,7 @@ let PostFeed = ({
   const showProgressIntersitial =
     (followProgressGuide || followAndLikeProgressGuide) && !rightNavVisible
 
-  const {trendingDisabled, trendingVideoDisabled} = useTrendingSettings()
+  const { trendingDisabled, trendingVideoDisabled } = useTrendingSettings()
 
   const ageAssuranceBannerState = useAgeAssuranceBannerState()
   const selectedFeed = useSelectedFeed()
@@ -378,7 +381,7 @@ let PostFeed = ({
   const feedItems: FeedRow[] = useMemo(() => {
     // wraps a slice item, and replaces it with a showLessFollowup item
     // if the user has pressed show less on it
-    const sliceItem = (row: Extract<FeedRow, {type: 'sliceItem'}>) => {
+    const sliceItem = (row: Extract<FeedRow, { type: 'sliceItem' }>) => {
       if (hasPressedShowLessUris.has(row.slice.items[row.indexInSlice]?.uri)) {
         return {
           type: 'showLessFollowup',
@@ -484,6 +487,35 @@ let PostFeed = ({
         } else {
           for (const page of data?.pages) {
             for (const slice of page.slices) {
+              if (
+                feedKind === 'following' ||
+                feedKind === 'discover' ||
+                feedKind === 'profile'
+              ) {
+                let videoCount = 0
+                let imageCount = 0
+                for (const item of slice.items) {
+                  if (AppBskyEmbedVideo.isView(item.post.embed)) {
+                    videoCount++
+                  } else if (AppBskyEmbedImages.isView(item.post.embed)) {
+                    imageCount++
+                  } else if (
+                    AppBskyEmbedRecordWithMedia.isView(item.post.embed)
+                  ) {
+                    if (AppBskyEmbedVideo.isView(item.post.embed.media)) {
+                      videoCount++
+                    } else if (
+                      AppBskyEmbedImages.isView(item.post.embed.media)
+                    ) {
+                      imageCount++
+                    }
+                  }
+                }
+                if (videoCount < 1 || imageCount < 1) {
+                  continue
+                }
+              }
+
               sliceIndex++
 
               if (hasSession) {
@@ -699,7 +731,7 @@ let PostFeed = ({
       await refetch()
       onHasNew?.(false)
     } catch (err) {
-      logger.error('Failed to refresh posts feed', {message: err})
+      logger.error('Failed to refresh posts feed', { message: err })
     }
     setIsPTRing(false)
   }, [refetch, setIsPTRing, onHasNew, feed, feedType])
@@ -715,7 +747,7 @@ let PostFeed = ({
     try {
       await fetchNextPage()
     } catch (err) {
-      logger.error('Failed to load more posts', {message: err})
+      logger.error('Failed to load more posts', { message: err })
     }
   }, [
     isFetching,
@@ -740,7 +772,7 @@ let PostFeed = ({
   // =
 
   const renderItem = useCallback(
-    ({item: row, index: rowIndex}: ListRenderItemInfo<FeedRow>) => {
+    ({ item: row, index: rowIndex }: ListRenderItemInfo<FeedRow>) => {
       if (row.type === 'empty') {
         return renderEmptyState()
       } else if (row.type === 'error') {
@@ -787,6 +819,20 @@ let PostFeed = ({
         const slice = row.slice
         const indexInSlice = row.indexInSlice
         const item = slice.items[indexInSlice]
+
+        // Hide media replies (not the first/root item) - accessible via overlay
+        if (indexInSlice > 0) {
+          const embed = item.post.embed
+          const hasMedia =
+            AppBskyEmbedImages.isView(embed) ||
+            AppBskyEmbedVideo.isView(embed) ||
+            (AppBskyEmbedRecordWithMedia.isView(embed) &&
+              (AppBskyEmbedImages.isView(embed.media) || AppBskyEmbedVideo.isView(embed.media)))
+          if (hasMedia) {
+            return null
+          }
+        }
+
         return (
           <PostFeedItem
             post={item.post}
@@ -877,12 +923,12 @@ let PostFeed = ({
     return isFetchingNextPage ? (
       <View style={[styles.feedFooter]}>
         <ActivityIndicator />
-        <View style={{height: offset}} />
+        <View style={{ height: offset }} />
       </View>
     ) : shouldRenderEndOfFeed ? (
-      <View style={{minHeight: offset}}>{renderEndOfFeed()}</View>
+      <View style={{ minHeight: offset }}>{renderEndOfFeed()}</View>
     ) : (
-      <View style={{height: offset}} />
+      <View style={{ height: offset }} />
     )
   }, [isFetchingNextPage, shouldRenderEndOfFeed, renderEndOfFeed, headerOffset])
 
@@ -944,7 +990,7 @@ let PostFeed = ({
               feedDescriptor: feedFeedback.feedDescriptor || feed,
               position,
             },
-            {statsig: false},
+            { statsig: false },
           )
         }
 
@@ -963,7 +1009,7 @@ let PostFeed = ({
                 subject: actor.did,
                 feed,
               },
-              {statsig: false},
+              { statsig: false },
             )
           }
         }
@@ -987,7 +1033,7 @@ let PostFeed = ({
                 feedDescriptor: feedFeedback.feedDescriptor || feed,
                 position,
               },
-              {statsig: false},
+              { statsig: false },
             )
           }
         }
@@ -1031,10 +1077,10 @@ let PostFeed = ({
   )
 }
 PostFeed = memo(PostFeed)
-export {PostFeed}
+export { PostFeed }
 
 const styles = StyleSheet.create({
-  feedFooter: {paddingTop: 20},
+  feedFooter: { paddingTop: 20 },
 })
 
 export function isThreadParentAt<T>(arr: Array<T>, i: number) {

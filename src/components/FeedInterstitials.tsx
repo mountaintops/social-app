@@ -942,7 +942,7 @@ export function ProgressGuide() {
         a.py_lg,
         !gtMobile && {marginTop: 4},
       ]}>
-      <ProgressGuideList />
+      {/* <ProgressGuideList /> */}
     </View>
   )
 }

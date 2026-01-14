@@ -18,7 +18,7 @@ import {
 } from '#/lib/routes/types'
 import {useGate} from '#/lib/statsig/statsig'
 import {sanitizeDisplayName} from '#/lib/strings/display-names'
-import {isInvalidHandle, sanitizeHandle} from '#/lib/strings/handles'
+import {isInvalidHandle, sanitizeHandle, stripHandleSuffix} from '#/lib/strings/handles'
 import {emitSoftReset} from '#/state/events'
 import {useHomeBadge} from '#/state/home-badge'
 import {useFetchHandle} from '#/state/queries/handle'
@@ -164,7 +164,7 @@ function ProfileCard() {
                           style={[a.font_bold, a.text_sm, a.leading_snug]}
                           numberOfLines={1}>
                           {sanitizeDisplayName(
-                            profile.displayName || profile.handle,
+                            profile.displayName || stripHandleSuffix(profile.handle),
                           )}
                         </Text>
                         <Text
@@ -708,7 +708,10 @@ export function DesktopLeftNav() {
             }
             label={_(msg`Notifications`)}
           />
+          {/*
           <ChatNavItem />
+          */}
+          {/*
           <NavItem
             href="/feeds"
             icon={
@@ -727,6 +730,8 @@ export function DesktopLeftNav() {
             }
             label={_(msg`Feeds`)}
           />
+          */}
+          {/*
           <NavItem
             href="/lists"
             icon={
@@ -745,6 +750,7 @@ export function DesktopLeftNav() {
             }
             label={_(msg`Lists`)}
           />
+          */}
           <NavItem
             href="/saved"
             icon={

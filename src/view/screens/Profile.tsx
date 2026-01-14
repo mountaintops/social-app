@@ -230,15 +230,15 @@ function ProfileScreenLoaded({
 
   const sectionTitles = [
     showFiltersTab ? _(msg`Labels`) : undefined,
-    showListsTab && hasLabeler ? _(msg`Lists`) : undefined,
+    /* showListsTab && hasLabeler ? _(msg`Lists`) : undefined, */
     showPostsTab ? _(msg`Posts`) : undefined,
     showRepliesTab ? _(msg`Replies`) : undefined,
-    showMediaTab ? _(msg`Media`) : undefined,
+    /* showMediaTab ? _(msg`Media`) : undefined, */
     showVideosTab ? _(msg`Videos`) : undefined,
     showLikesTab ? _(msg`Likes`) : undefined,
-    showFeedsTab ? _(msg`Feeds`) : undefined,
-    showStarterPacksTab ? _(msg`Starter Packs`) : undefined,
-    showListsTab && !hasLabeler ? _(msg`Lists`) : undefined,
+    /* showFeedsTab ? _(msg`Feeds`) : undefined, */
+    /* showStarterPacksTab ? _(msg`Starter Packs`) : undefined, */
+    /* showListsTab && !hasLabeler ? _(msg`Lists`) : undefined, */
   ].filter(Boolean) as string[]
 
   let nextIndex = 0
@@ -406,7 +406,7 @@ function ProfileScreenLoaded({
               />
             )
           : null}
-        {showListsTab && !!profile.associated?.labeler
+        {/* {showListsTab && !!profile.associated?.labeler
           ? ({headerHeight, isFocused, scrollElRef}) => (
               <ProfileLists
                 ref={listsSectionRef}
@@ -417,7 +417,7 @@ function ProfileScreenLoaded({
                 setScrollViewTag={setScrollViewTag}
               />
             )
-          : null}
+          : null} */}
         {showPostsTab
           ? ({headerHeight, isFocused, scrollElRef}) => (
               <ProfileFeedSection
@@ -458,7 +458,7 @@ function ProfileScreenLoaded({
               />
             )
           : null}
-        {showMediaTab
+        {/* {showMediaTab
           ? ({headerHeight, isFocused, scrollElRef}) => (
               <ProfileFeedSection
                 ref={mediaSectionRef}
@@ -483,7 +483,7 @@ function ProfileScreenLoaded({
                 emptyStateIcon={ImageIcon}
               />
             )
-          : null}
+          : null} */}
         {showVideosTab
           ? ({headerHeight, isFocused, scrollElRef}) => (
               <ProfileFeedSection
@@ -525,7 +525,7 @@ function ProfileScreenLoaded({
               />
             )
           : null}
-        {showFeedsTab
+        {/* {showFeedsTab
           ? ({headerHeight, isFocused, scrollElRef}) => (
               <ProfileFeedgens
                 ref={feedsSectionRef}
@@ -536,8 +536,8 @@ function ProfileScreenLoaded({
                 setScrollViewTag={setScrollViewTag}
               />
             )
-          : null}
-        {showStarterPacksTab
+          : null} */}
+        {/* {showStarterPacksTab
           ? ({headerHeight, isFocused, scrollElRef}) => (
               <ProfileStarterPacks
                 ref={starterPacksSectionRef}
@@ -568,8 +568,8 @@ function ProfileScreenLoaded({
                 emptyStateIcon={CircleAndSquareIcon}
               />
             )
-          : null}
-        {showListsTab && !profile.associated?.labeler
+          : null} */}
+        {/* {showListsTab && !profile.associated?.labeler
           ? ({headerHeight, isFocused, scrollElRef}) => (
               <ProfileLists
                 ref={listsSectionRef}
@@ -580,7 +580,7 @@ function ProfileScreenLoaded({
                 setScrollViewTag={setScrollViewTag}
               />
             )
-          : null}
+          : null} */}
       </PagerWithHeader>
       {hasSession && (
         <FAB

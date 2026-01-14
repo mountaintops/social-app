@@ -681,17 +681,17 @@ export function Explore({
 
     // Dynamic module ordering
 
-    i.push(topBorder)
-    i.push(...interestsNuxModule)
+    /* i.push(topBorder) */
+    /* i.push(...interestsNuxModule) */
 
     if (useFullExperience) {
-      i.push(trendingTopicsModule)
-      i.push(...suggestedFeedsModule)
-      i.push(...suggestedFollowsModule)
-      i.push(...suggestedStarterPacksModule)
-      i.push(...feedPreviewsModule)
+      /* i.push(trendingTopicsModule) */
+      /* i.push(...suggestedFeedsModule) */
+      /* i.push(...suggestedFollowsModule) */
+      /* i.push(...suggestedStarterPacksModule) */
+      /* i.push(...feedPreviewsModule) */
     } else {
-      i.push(...suggestedFollowsModule)
+      /* i.push(...suggestedFollowsModule) */
     }
 
     return i
