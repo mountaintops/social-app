@@ -285,6 +285,36 @@ def modify_post_feed():
     with open(POST_FEED_FILE, 'r', encoding='utf-8') as f:
         content = f.read()
 
+    # Add Imports
+    if 'AppBskyEmbedImages' not in content:
+        # Find the @atproto/api import
+        if "from '@atproto/api'" in content:
+            # Try to inject into existing import block
+            content = content.replace(
+                "import {",
+                "import {\n  AppBskyEmbedImages,\n  AppBskyEmbedRecordWithMedia,\n  AppBskyEmbedVideo,",
+                1 # Only first occurrence which should be fine or we target specific one if duplicates exist
+            )
+            # A bit crude, better to target the specific import block for @atproto/api if possible/
+            # but PostFeed.tsx usually starts with it or close to it.
+            # Let's try a safer target if possible, or just append distinct import if needed (but duplicated imports are valid in TS)
+            # Actually, let's use a specific anchor if we can.
+            pass 
+        
+        # Safer append compatible with existing imports
+        # If we can't easily merge, we can just add a new line, but TS prefers merged.
+        # Let's try replacing a known import line.
+        if "import {useQueryClient} from '@tanstack/react-query'" in content:
+             content = content.replace(
+                "import {useQueryClient} from '@tanstack/react-query'",
+                "import {useQueryClient} from '@tanstack/react-query'\nimport {AppBskyEmbedImages, AppBskyEmbedRecordWithMedia, AppBskyEmbedVideo} from '@atproto/api'"
+             )
+        else:
+             # Fallback: Just look for any import and prepend/append
+             TARGET = "import {FlatList, type ListRenderItemInfo, StyleSheet, View} from 'react-native'"
+             if TARGET in content:
+                 content = content.replace(TARGET, TARGET + "\nimport {AppBskyEmbedImages, AppBskyEmbedRecordWithMedia, AppBskyEmbedVideo} from '@atproto/api'")
+
     # Add Logic for filtering media replies
     TARGET_LOGIC = r'''        // Hide media replies (not the first/root item) - accessible via overlay
         if (indexInSlice > 0) {
@@ -435,6 +465,15 @@ def modify_thread_post():
             "import {Embed, PostEmbedViewContext} from '#/components/Post/Embed'",
             "import {Embed, PostEmbedViewContext} from '#/components/Post/Embed'\nimport {ReplyOverlay} from '#/components/ReplyOverlay'\nimport {useReplyMediaQuery} from '#/state/queries/reply-media'"
         )
+
+    # Add Embed types for filtering
+    if 'AppBskyEmbedImages' not in content:
+        # Target the @atproto/api import block
+        TARGET_IMPORT = "  type AppBskyFeedDefs,"
+        NEW_IMPORTS = "  AppBskyEmbedImages,\n  AppBskyEmbedRecordWithMedia,\n  AppBskyEmbedVideo,\n  type AppBskyFeedDefs,"
+        
+        if TARGET_IMPORT in content:
+            content = content.replace(TARGET_IMPORT, NEW_IMPORTS)
 
     # Logic to hide media replies
     if 'Hide media replies' not in content:
