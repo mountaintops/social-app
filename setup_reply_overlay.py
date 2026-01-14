@@ -310,6 +310,21 @@ def modify_post_feed():
         else:
             print("Could not find insertion point in PostFeed.tsx")
 
+    # Add Embed types for filtering
+    if 'AppBskyEmbedImages' not in content:
+        # Target the @atproto/api import block end
+        if "from '@atproto/api'" in content:
+            # We want to add the new imports to the import list
+            # The list usually ends with `} from '@atproto/api'`
+            
+            # Simple approach: Replace the closing line
+            content = content.replace(
+                "} from '@atproto/api'",
+                ", AppBskyEmbedImages, AppBskyEmbedRecordWithMedia, AppBskyEmbedVideo } from '@atproto/api'"
+            )
+        else:
+            print("Warning: could not find @atproto/api import to append to")
+
     with open(POST_FEED_FILE, 'w', encoding='utf-8') as f:
         f.write(content)
 
@@ -328,8 +343,8 @@ def modify_post_feed_item():
     # Query Hook
     if 'useReplyMediaQuery(' not in content:
         content = content.replace(
-            "const onOpenAuthor = useCallback",
-            "const {data: replyMedia = []} = useReplyMediaQuery(post.uri)\n\n  const onOpenAuthor = useCallback"
+            "const onOpenAuthor = () => {",
+            "const {data: replyMedia = []} = useReplyMediaQuery(post.uri)\n\n  const onOpenAuthor = () => {"
         )
     
     # Render Overlay
@@ -380,8 +395,8 @@ def modify_thread_anchor():
     # Query Hook
     if 'useReplyMediaQuery(' not in content:
         content = content.replace(
-            "const { isActive: live } = useActorStatus(post.author)",
-            "const { isActive: live } = useActorStatus(post.author)\n  const { data: replyMedia = [] } = useReplyMediaQuery(post.uri)"
+            "const {isActive: live} = useActorStatus(post.author)",
+            "const {isActive: live} = useActorStatus(post.author)\n  const {data: replyMedia = []} = useReplyMediaQuery(post.uri)"
         )
 
     # Render Overlay
@@ -438,9 +453,35 @@ def modify_thread_post():
 
     # Logic to hide media replies
     if 'Hide media replies' not in content:
-        # Find insertion point in main component function
-        INSERT_POINT = "if (postShadow === POST_TOMBSTONE) {"
-        TARGET_LOGIC = r'''
+        # Find the specific block to append after
+        # Use simple string replacement for reliability as the block is standard
+        BLOCK_START = "if (postShadow === POST_TOMBSTONE) {"
+        BLOCK_END_MATCH = "return <ThreadItemPostDeleted item={item} overrides={overrides} />"
+        
+        # We look for the block and append after the closing brace
+        # But wait, the user's file might be formatted differently (multi-line JSX props).
+        # Let's try to match the closing brace of that specific if block.
+        
+        # The safer way: Insert *before* the inner component return if we can't find the tombstone block? 
+        # No, we need it early return.
+        
+        # Let's try to find the stable anchor "return <ThreadItemPostDeleted"
+        if "return <ThreadItemPostDeleted" in content:
+            # Find the closing brace for the if block that contains this. 
+            # It's usually "  }" a line or two down.
+            
+            # Let's just find the if block start, and assume standard formatting if possible, 
+            # OR regex search for the closing } of the if.
+            
+            # Regex to find: if ... { ... return ... }
+            # flags=re.DOTALL to match newlines
+            pattern = re.compile(r'(if \(postShadow === POST_TOMBSTONE\) \{.*?return <ThreadItemPostDeleted.*?\n\s*\})', re.DOTALL)
+            match = pattern.search(content)
+            
+            if match:
+                full_block = match.group(1)
+                
+                TARGET_LOGIC = r'''
   // Hide media replies - they're accessible via overlay
   const embed = item.value.post.embed
   const hasMedia =
@@ -453,29 +494,22 @@ def modify_thread_post():
     return null
   }
 '''
-        # We need to find the close brace of the if block
-        match = re.search(r'if \(postShadow === POST_TOMBSTONE\) \{[^}]+\}', content)
-        if match:
-             content = content.replace(match.group(0), match.group(0) + TARGET_LOGIC)
-
+                content = content.replace(full_block, full_block + '\n' + TARGET_LOGIC)
+            else:
+                 print("Could not find POST_TOMBSTONE block with regex")
+        else:
+             print("Could not find ThreadItemPostDeleted return")
+    # Query Hook
     # Query Hook
     if 'useReplyMediaQuery(' not in content:
-        content = content.replace(
-            "const {currentAccount} = useSession()",
-            "const {currentAccount} = useSession()\n\n  const post = item.value.post\n  const record = item.value.post.record\n  const moderation = item.moderation\n  const { data: replyMedia = [] } = useReplyMediaQuery(post.uri)"
-        )
-        # Note: ThreadItemPost implementation of hook access was slightly different in manual edit (variable access order)
-        # But this replacement targets a stable anchor point.
-        # Wait, the manual edit added it after `const moderation = item.moderation`?
-        # Let's check where `item.value.post` is defined.
-        # It's defined AFTER `const {currentAccount} = useSession()`.
-        # So I can't insert it before `post` is defined. 
-        # I should insert it after `post` definition.
-        
-        # Correct approach:
+        # We target the `moderation` definition which is a stable anchor in this file
         SEARCH = "const moderation = item.moderation"
         REPLACE = "const moderation = item.moderation\n  const { data: replyMedia = [] } = useReplyMediaQuery(post.uri)"
-        content = content.replace(SEARCH, REPLACE)
+        
+        if SEARCH in content:
+            content = content.replace(SEARCH, REPLACE)
+        else:
+            print("Could not find 'const moderation = item.moderation' anchor")
 
 
     # Render Overlay
