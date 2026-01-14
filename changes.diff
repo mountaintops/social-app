@@ -1,0 +1,2121 @@
+diff --git a/src/components/FeedInterstitials.tsx b/src/components/FeedInterstitials.tsx
+index cad86facb..b13ce9fb8 100644
+--- a/src/components/FeedInterstitials.tsx
++++ b/src/components/FeedInterstitials.tsx
+@@ -942,7 +942,7 @@ export function ProgressGuide() {
+         a.py_lg,
+         !gtMobile && {marginTop: 4},
+       ]}>
+-      <ProgressGuideList />
++      {/* <ProgressGuideList /> */}
+     </View>
+   )
+ }
+diff --git a/src/components/PostControls/PostMenu/PostMenuItems.tsx b/src/components/PostControls/PostMenu/PostMenuItems.tsx
+index ce93e81ab..6b33f8f53 100644
+--- a/src/components/PostControls/PostMenu/PostMenuItems.tsx
++++ b/src/components/PostControls/PostMenu/PostMenuItems.tsx
+@@ -490,28 +490,28 @@ let PostMenuItems = ({
+                 />
+               </Menu.Item>
+             </Menu.Group>
+-            <Menu.Divider />
++            {/* <Menu.Divider /> */}
+           </>
+         )}
+ 
+         <Menu.Group>
+           {!hideInPWI || hasSession ? (
+             <>
+-              <Menu.Item
++              {/* <Menu.Item
+                 testID="postDropdownTranslateBtn"
+                 label={_(msg`Translate`)}
+                 onPress={onPressTranslate}>
+                 <Menu.ItemText>{_(msg`Translate`)}</Menu.ItemText>
+                 <Menu.ItemIcon icon={Translate} position="right" />
+-              </Menu.Item>
++              </Menu.Item> */}
+ 
+-              <Menu.Item
++              {/* <Menu.Item
+                 testID="postDropdownCopyTextBtn"
+                 label={_(msg`Copy post text`)}
+                 onPress={onCopyPostText}>
+                 <Menu.ItemText>{_(msg`Copy post text`)}</Menu.ItemText>
+                 <Menu.ItemIcon icon={ClipboardIcon} position="right" />
+-              </Menu.Item>
++              </Menu.Item> */}
+             </>
+           ) : (
+             <Menu.Item
+@@ -526,45 +526,45 @@ let PostMenuItems = ({
+ 
+         {hasSession && feedFeedback.enabled && (
+           <>
+-            <Menu.Divider />
++            {/* <Menu.Divider /> */}
+             <Menu.Group>
+-              <Menu.Item
++              {/* <Menu.Item
+                 testID="postDropdownShowMoreBtn"
+                 label={_(msg`Show more like this`)}
+                 onPress={onPressShowMore}>
+                 <Menu.ItemText>{_(msg`Show more like this`)}</Menu.ItemText>
+                 <Menu.ItemIcon icon={EmojiSmile} position="right" />
+-              </Menu.Item>
++              </Menu.Item> */}
+ 
+-              <Menu.Item
++              {/* <Menu.Item
+                 testID="postDropdownShowLessBtn"
+                 label={_(msg`Show less like this`)}
+                 onPress={onPressShowLess}>
+                 <Menu.ItemText>{_(msg`Show less like this`)}</Menu.ItemText>
+                 <Menu.ItemIcon icon={EmojiSad} position="right" />
+-              </Menu.Item>
++              </Menu.Item> */}
+             </Menu.Group>
+           </>
+         )}
+ 
+         {isDiscoverDebugUser && (
+           <>
+-            <Menu.Divider />
+-            <Menu.Item
++            {/* <Menu.Divider /> */}
++            {/* <Menu.Item
+               testID="postDropdownReportMisclassificationBtn"
+               label={_(msg`Assign topic for algo`)}
+               onPress={onReportMisclassification}>
+               <Menu.ItemText>{_(msg`Assign topic for algo`)}</Menu.ItemText>
+               <Menu.ItemIcon icon={AtomIcon} position="right" />
+-            </Menu.Item>
++            </Menu.Item> */}
+           </>
+         )}
+ 
+         {hasSession && (
+           <>
+-            <Menu.Divider />
++            {/* <Menu.Divider /> */}
+             <Menu.Group>
+-              <Menu.Item
++              {/* <Menu.Item
+                 testID="postDropdownMuteThreadBtn"
+                 label={
+                   isThreadMuted ? _(msg`Unmute thread`) : _(msg`Mute thread`)
+@@ -577,7 +577,7 @@ let PostMenuItems = ({
+                   icon={isThreadMuted ? Unmute : Mute}
+                   position="right"
+                 />
+-              </Menu.Item>
++              </Menu.Item> */}
+ 
+               <Menu.Item
+                 testID="postDropdownMuteWordsBtn"
+@@ -593,7 +593,7 @@ let PostMenuItems = ({
+         {hasSession &&
+           (canHideReplyForEveryone || canDetachQuote || canHidePostForMe) && (
+             <>
+-              <Menu.Divider />
++              {/* <Menu.Divider /> */}
+               <Menu.Group>
+                 {canHidePostForMe && (
+                   <Menu.Item
+@@ -674,7 +674,7 @@ let PostMenuItems = ({
+ 
+         {hasSession && (
+           <>
+-            <Menu.Divider />
++            {/* <Menu.Divider /> */}
+             <Menu.Group>
+               {!isAuthor && (
+                 <>
+diff --git a/src/components/ReplyOverlay.tsx b/src/components/ReplyOverlay.tsx
+index 664dabff3..087241375 100644
+--- a/src/components/ReplyOverlay.tsx
++++ b/src/components/ReplyOverlay.tsx
+@@ -11,12 +11,13 @@ import { useNavigation } from '@react-navigation/native'
+ 
+ import { makeProfileLink } from '#/lib/routes/links'
+ import { type NavigationProp } from '#/lib/routes/types'
+-import { atoms as a, useTheme } from '#/alf'
++import { useTheme } from '#/alf'
+ 
+ const MAX_OVERLAYS = 9
+ 
+ interface ReplyOverlayProps {
+     replies: AppBskyFeedDefs.PostView[]
++    anchorUri?: string // URI of the main post to filter out
+ }
+ 
+ function getMediaUrl(post: AppBskyFeedDefs.PostView): string | null {
+@@ -48,7 +49,7 @@ function getMediaUrl(post: AppBskyFeedDefs.PostView): string | null {
+     return null
+ }
+ 
+-let ReplyOverlay = ({ replies }: ReplyOverlayProps): React.ReactNode => {
++let ReplyOverlay = ({ replies, anchorUri }: ReplyOverlayProps): React.ReactNode => {
+     const t = useTheme()
+     const navigation = useNavigation<NavigationProp>()
+ 
+@@ -60,42 +61,46 @@ let ReplyOverlay = ({ replies }: ReplyOverlayProps): React.ReactNode => {
+                 if (!reply.uri || typeof reply.uri !== 'string') return false
+                 if (!reply.author || typeof reply.author !== 'object') return false
+                 if (!reply.author.handle || typeof reply.author.handle !== 'string') return false
++                // Filter out anchor post (the main post itself)
++                if (anchorUri && reply.uri === anchorUri) {
++                    // console.log('[ReplyOverlay] Filtered out anchor:', reply.uri)
++                    return false
++                }
+                 // Check for media
+                 return getMediaUrl(reply) !== null
+             })
+             .slice(0, MAX_OVERLAYS)
+-    }, [replies])
+-
+-    // Debug logging
+-    console.log('[ReplyOverlay] Received replies:', replies.length, 'Media replies:', mediaReplies.length)
++    }, [replies, anchorUri])
+ 
+     if (mediaReplies.length === 0) {
+         return null
+     }
+ 
+     const handlePress = (post: AppBskyFeedDefs.PostView) => {
+-        const href = makeProfileLink(post.author, 'post', post.uri.split('/').pop())
++        // const href = makeProfileLink(post.author, 'post', post.uri.split('/').pop())
+         navigation.push('PostThread', { name: post.author.handle, rkey: post.uri.split('/').pop() })
+     }
+ 
+     // Layout: 3 or less = vertical, 4+ = grid (2 columns)
+     const isGrid = mediaReplies.length >= 4
+     const columns = 2 // Always 2 columns for grid
++    const itemSize = 50
++    const gap = 4
++    const gridWidth = (itemSize * columns) + (gap * (columns - 1)) + 8 // items + gaps + padding
+ 
+     return (
+         <View style={[styles.container]}>
+             <View
+                 style={[
+                     styles.overlayContainer,
+-                    isGrid ? styles.gridContainer : styles.verticalContainer,
+-                    isGrid && { width: columns * 54 },
++                    isGrid ? [styles.gridContainer, { width: gridWidth }] : styles.verticalContainer,
+                 ]}>
+-                {mediaReplies.map((reply, index) => {
++                {mediaReplies.map((reply) => {
+                     const mediaUrl = getMediaUrl(reply)
+                     if (!mediaUrl) return null
+ 
+                     return (
+-                        <Pressable
++                        <Pressable accessibilityRole="button"
+                             key={reply.uri}
+                             onPress={() => handlePress(reply)}
+                             style={[
+@@ -108,6 +113,7 @@ let ReplyOverlay = ({ replies }: ReplyOverlayProps): React.ReactNode => {
+                                 source={{ uri: mediaUrl }}
+                                 style={styles.thumbnailImage}
+                                 contentFit="cover"
++                                accessibilityIgnoresInvertColors
+                             />
+                         </Pressable>
+                     )
+diff --git a/src/lib/strings/handles.ts b/src/lib/strings/handles.ts
+index bdac50a56..e206473cf 100644
+--- a/src/lib/strings/handles.ts
++++ b/src/lib/strings/handles.ts
+@@ -2,6 +2,21 @@
+ // https://github.com/bluesky-social/indigo/blob/main/atproto/syntax/handle.go#L10
+ import {forceLTR} from '#/lib/strings/bidi'
+ 
++// Strip handle suffix for cleaner display
++export function stripHandleSuffix(handle: string): string {
++  const parts = handle.split('.')
++  return parts[0]
++}
++
++// Add default suffix to a handle if it doesn't have one
++export function ensureHandleSuffix(handle: string): string {
++  if (!handle.includes('.')) {
++    return handle + '.bsky.social'
++  }
++  return handle
++}
++
++
+ const VALIDATE_REGEX =
+   /^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/
+ 
+@@ -30,7 +45,7 @@ export function sanitizeHandle(
+   prefix = '',
+   forceLeftToRight = true,
+ ): string {
+-  const lowercasedWithPrefix = `${prefix}${handle.toLocaleLowerCase()}`
++  const lowercasedWithPrefix = `${prefix}${stripHandleSuffix(handle).toLocaleLowerCase()}`
+   return isInvalidHandle(handle)
+     ? '⚠Invalid Handle'
+     : forceLeftToRight
+diff --git a/src/screens/PostThread/components/ThreadItemAnchor.tsx b/src/screens/PostThread/components/ThreadItemAnchor.tsx
+index fbed7965b..658c54221 100644
+--- a/src/screens/PostThread/components/ThreadItemAnchor.tsx
++++ b/src/screens/PostThread/components/ThreadItemAnchor.tsx
+@@ -1,5 +1,5 @@
+-import {memo, useCallback, useMemo} from 'react'
+-import {type GestureResponderEvent, Text as RNText, View} from 'react-native'
++import { memo, useCallback, useMemo } from 'react'
++import { type GestureResponderEvent, Text as RNText, View } from 'react-native'
+ import {
+   AppBskyFeedDefs,
+   AppBskyFeedPost,
+@@ -7,59 +7,61 @@ import {
+   AtUri,
+   RichText as RichTextAPI,
+ } from '@atproto/api'
+-import {msg, Plural, Trans} from '@lingui/macro'
+-import {useLingui} from '@lingui/react'
+-
+-import {useActorStatus} from '#/lib/actor-status'
+-import {useOpenComposer} from '#/lib/hooks/useOpenComposer'
+-import {useTranslate} from '#/lib/hooks/useTranslate'
+-import {makeProfileLink} from '#/lib/routes/links'
+-import {sanitizeDisplayName} from '#/lib/strings/display-names'
+-import {sanitizeHandle} from '#/lib/strings/handles'
+-import {niceDate} from '#/lib/strings/time'
+-import {getTranslatorLink, isPostInLanguage} from '#/locale/helpers'
+-import {logger} from '#/logger'
++import { msg, Plural, Trans } from '@lingui/macro'
++import { useLingui } from '@lingui/react'
++
++import { useActorStatus } from '#/lib/actor-status'
++import { useOpenComposer } from '#/lib/hooks/useOpenComposer'
++import { useTranslate } from '#/lib/hooks/useTranslate'
++import { makeProfileLink } from '#/lib/routes/links'
++import { sanitizeDisplayName } from '#/lib/strings/display-names'
++import { sanitizeHandle } from '#/lib/strings/handles'
++import { niceDate } from '#/lib/strings/time'
++import { getTranslatorLink, isPostInLanguage } from '#/locale/helpers'
++import { logger } from '#/logger'
+ import {
+   POST_TOMBSTONE,
+   type Shadow,
+   usePostShadow,
+ } from '#/state/cache/post-shadow'
+-import {useProfileShadow} from '#/state/cache/profile-shadow'
+-import {FeedFeedbackProvider, useFeedFeedback} from '#/state/feed-feedback'
+-import {useLanguagePrefs} from '#/state/preferences'
+-import {type ThreadItem} from '#/state/queries/usePostThread/types'
+-import {useSession} from '#/state/session'
+-import {type OnPostSuccessData} from '#/state/shell/composer'
+-import {useMergedThreadgateHiddenReplies} from '#/state/threadgate-hidden-replies'
+-import {type PostSource} from '#/state/unstable-post-source'
+-import {PreviewableUserAvatar} from '#/view/com/util/UserAvatar'
+-import {ThreadItemAnchorFollowButton} from '#/screens/PostThread/components/ThreadItemAnchorFollowButton'
++import { useProfileShadow } from '#/state/cache/profile-shadow'
++import { FeedFeedbackProvider, useFeedFeedback } from '#/state/feed-feedback'
++import { useLanguagePrefs } from '#/state/preferences'
++import { type ThreadItem } from '#/state/queries/usePostThread/types'
++import { useSession } from '#/state/session'
++import { type OnPostSuccessData } from '#/state/shell/composer'
++import { useMergedThreadgateHiddenReplies } from '#/state/threadgate-hidden-replies'
++import { type PostSource } from '#/state/unstable-post-source'
++import { PreviewableUserAvatar } from '#/view/com/util/UserAvatar'
++import { ThreadItemAnchorFollowButton } from '#/screens/PostThread/components/ThreadItemAnchorFollowButton'
+ import {
+   LINEAR_AVI_WIDTH,
+   OUTER_SPACE,
+   REPLY_LINE_WIDTH,
+ } from '#/screens/PostThread/const'
+-import {atoms as a, useTheme} from '#/alf'
+-import {colors} from '#/components/Admonition'
+-import {Button} from '#/components/Button'
+-import {DebugFieldDisplay} from '#/components/DebugFieldDisplay'
+-import {CalendarClock_Stroke2_Corner0_Rounded as CalendarClockIcon} from '#/components/icons/CalendarClock'
+-import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
+-import {InlineLinkText, Link} from '#/components/Link'
+-import {ContentHider} from '#/components/moderation/ContentHider'
+-import {LabelsOnMyPost} from '#/components/moderation/LabelsOnMe'
+-import {PostAlerts} from '#/components/moderation/PostAlerts'
+-import {type AppModerationCause} from '#/components/Pills'
+-import {Embed, PostEmbedViewContext} from '#/components/Post/Embed'
+-import {PostControls, PostControlsSkeleton} from '#/components/PostControls'
+-import {useFormatPostStatCount} from '#/components/PostControls/util'
+-import {ProfileHoverCard} from '#/components/ProfileHoverCard'
++import { atoms as a, useTheme } from '#/alf'
++import { colors } from '#/components/Admonition'
++import { Button } from '#/components/Button'
++import { DebugFieldDisplay } from '#/components/DebugFieldDisplay'
++import { CalendarClock_Stroke2_Corner0_Rounded as CalendarClockIcon } from '#/components/icons/CalendarClock'
++import { Trash_Stroke2_Corner0_Rounded as TrashIcon } from '#/components/icons/Trash'
++import { InlineLinkText, Link } from '#/components/Link'
++import { ContentHider } from '#/components/moderation/ContentHider'
++import { LabelsOnMyPost } from '#/components/moderation/LabelsOnMe'
++import { PostAlerts } from '#/components/moderation/PostAlerts'
++import { type AppModerationCause } from '#/components/Pills'
++import { Embed, PostEmbedViewContext } from '#/components/Post/Embed'
++import { ReplyOverlay } from '#/components/ReplyOverlay'
++import { useReplyMediaQuery } from '#/state/queries/reply-media'
++import { PostControls, PostControlsSkeleton } from '#/components/PostControls'
++import { useFormatPostStatCount } from '#/components/PostControls/util'
++import { ProfileHoverCard } from '#/components/ProfileHoverCard'
+ import * as Prompt from '#/components/Prompt'
+-import {RichText} from '#/components/RichText'
++import { RichText } from '#/components/RichText'
+ import * as Skele from '#/components/Skeleton'
+-import {Text} from '#/components/Typography'
+-import {VerificationCheckButton} from '#/components/verification/VerificationCheckButton'
+-import {WhoCanReply} from '#/components/WhoCanReply'
++import { Text } from '#/components/Typography'
++import { VerificationCheckButton } from '#/components/verification/VerificationCheckButton'
++import { WhoCanReply } from '#/components/WhoCanReply'
+ import * as bsky from '#/types/bsky'
+ 
+ export function ThreadItemAnchor({
+@@ -68,7 +70,7 @@ export function ThreadItemAnchor({
+   threadgateRecord,
+   postSource,
+ }: {
+-  item: Extract<ThreadItem, {type: 'threadPost'}>
++  item: Extract<ThreadItem, { type: 'threadPost' }>
+   onPostSuccess?: (data: OnPostSuccessData) => void
+   threadgateRecord?: AppBskyFeedThreadgate.Record
+   postSource?: PostSource
+@@ -95,7 +97,7 @@ export function ThreadItemAnchor({
+   )
+ }
+ 
+-function ThreadItemAnchorDeleted({isRoot}: {isRoot: boolean}) {
++function ThreadItemAnchorDeleted({ isRoot }: { isRoot: boolean }) {
+   const t = useTheme()
+ 
+   return (
+@@ -139,12 +141,12 @@ function ThreadItemAnchorDeleted({isRoot}: {isRoot: boolean}) {
+   )
+ }
+ 
+-function ThreadItemAnchorParentReplyLine({isRoot}: {isRoot: boolean}) {
++function ThreadItemAnchorParentReplyLine({ isRoot }: { isRoot: boolean }) {
+   const t = useTheme()
+ 
+   return !isRoot ? (
+-    <View style={[a.pl_lg, a.flex_row, a.pb_xs, {height: a.pt_lg.paddingTop}]}>
+-      <View style={{width: 42}}>
++    <View style={[a.pl_lg, a.flex_row, a.pb_xs, { height: a.pt_lg.paddingTop }]}>
++      <View style={{ width: 42 }}>
+         <View
+           style={[
+             {
+@@ -169,7 +171,7 @@ const ThreadItemAnchorInner = memo(function ThreadItemAnchorInner({
+   threadgateRecord,
+   postSource,
+ }: {
+-  item: Extract<ThreadItem, {type: 'threadPost'}>
++  item: Extract<ThreadItem, { type: 'threadPost' }>
+   isRoot: boolean
+   postShadow: Shadow<AppBskyFeedDefs.PostView>
+   onPostSuccess?: (data: OnPostSuccessData) => void
+@@ -177,9 +179,9 @@ const ThreadItemAnchorInner = memo(function ThreadItemAnchorInner({
+   postSource?: PostSource
+ }) {
+   const t = useTheme()
+-  const {_} = useLingui()
+-  const {openComposer} = useOpenComposer()
+-  const {currentAccount, hasSession} = useSession()
++  const { _ } = useLingui()
++  const { openComposer } = useOpenComposer()
++  const { currentAccount, hasSession } = useSession()
+   const feedFeedback = useFeedFeedback(postSource?.feedSourceInfo, hasSession)
+   const formatPostStatCount = useFormatPostStatCount()
+ 
+@@ -187,7 +189,8 @@ const ThreadItemAnchorInner = memo(function ThreadItemAnchorInner({
+   const record = item.value.post.record
+   const moderation = item.moderation
+   const authorShadow = useProfileShadow(post.author)
+-  const {isActive: live} = useActorStatus(post.author)
++  const { isActive: live } = useActorStatus(post.author)
++  const { data: replyMedia = [] } = useReplyMediaQuery(post.uri)
+   const richText = useMemo(
+     () =>
+       new RichTextAPI({
+@@ -223,12 +226,12 @@ const ThreadItemAnchorInner = memo(function ThreadItemAnchorInner({
+       new AtUri(threadRootUri).host === currentAccount?.did
+     return isControlledByViewer && isPostHiddenByThreadgate
+       ? [
+-          {
+-            type: 'reply-hidden',
+-            source: {type: 'user', did: currentAccount?.did},
+-            priority: 6,
+-          },
+-        ]
++        {
++          type: 'reply-hidden',
++          source: { type: 'user', did: currentAccount?.did },
++          priority: 6,
++        },
++      ]
+       : []
+   }, [post, currentAccount?.did, threadgateHiddenReplies, threadRootUri])
+   const onlyFollowersCanReply = !!threadgateRecord?.allow?.find(
+@@ -359,7 +362,7 @@ const ThreadItemAnchorInner = memo(function ThreadItemAnchorInner({
+                     numberOfLines={1}>
+                     {sanitizeDisplayName(
+                       post.author.displayName ||
+-                        sanitizeHandle(post.author.handle),
++                      sanitizeHandle(post.author.handle),
+                       moderation.ui('displayName'),
+                     )}
+                   </Text>
+@@ -410,13 +413,14 @@ const ThreadItemAnchorInner = memo(function ThreadItemAnchorInner({
+               />
+             ) : undefined}
+             {post.embed && (
+-              <View style={[a.py_xs]}>
++              <View style={[a.py_xs, { position: 'relative' }]}>
+                 <Embed
+                   embed={post.embed}
+                   moderation={moderation}
+                   viewContext={PostEmbedViewContext.ThreadHighlighted}
+                   onOpen={onOpenEmbed}
+                 />
++                <ReplyOverlay replies={replyMedia} anchorUri={post.uri} />
+               </View>
+             )}
+           </ContentHider>
+@@ -425,9 +429,9 @@ const ThreadItemAnchorInner = memo(function ThreadItemAnchorInner({
+             isThreadAuthor={isThreadAuthor}
+           />
+           {post.repostCount !== 0 ||
+-          post.likeCount !== 0 ||
+-          post.quoteCount !== 0 ||
+-          post.bookmarkCount !== 0 ? (
++            post.likeCount !== 0 ||
++            post.quoteCount !== 0 ||
++            post.bookmarkCount !== 0 ? (
+             // Show this section unless we're *sure* it has no engagement.
+             <View
+               style={[
+@@ -460,7 +464,7 @@ const ThreadItemAnchorInner = memo(function ThreadItemAnchorInner({
+                   </Text>
+                 </Link>
+               ) : null}
+-              {post.quoteCount != null &&
++              {/* post.quoteCount != null &&
+               post.quoteCount !== 0 &&
+               !post.viewer?.embeddingDisabled ? (
+                 <Link to={quotesHref} label={_(msg`Quotes of this post`)}>
+@@ -477,7 +481,7 @@ const ThreadItemAnchorInner = memo(function ThreadItemAnchorInner({
+                     />
+                   </Text>
+                 </Link>
+-              ) : null}
++              ) : null */}
+               {post.likeCount != null && post.likeCount !== 0 ? (
+                 <Link to={likesHref} label={_(msg`Likes on this post`)}>
+                   <Text
+@@ -536,11 +540,11 @@ function ExpandedPostDetails({
+   post,
+   isThreadAuthor,
+ }: {
+-  post: Extract<ThreadItem, {type: 'threadPost'}>['value']['post']
++  post: Extract<ThreadItem, { type: 'threadPost' }>['value']['post']
+   isThreadAuthor: boolean
+ }) {
+   const t = useTheme()
+-  const {_, i18n} = useLingui()
++  const { _, i18n } = useLingui()
+   const translate = useTranslate()
+   const isRootPost = !('reply' in post.record)
+   const langPrefs = useLanguagePrefs()
+@@ -549,7 +553,7 @@ function ExpandedPostDetails({
+     () =>
+       Boolean(
+         langPrefs.primaryLanguage &&
+-          !isPostInLanguage(post, [langPrefs.primaryLanguage]),
++        !isPostInLanguage(post, [langPrefs.primaryLanguage]),
+       ),
+     [post, langPrefs.primaryLanguage],
+   )
+@@ -612,9 +616,9 @@ function ExpandedPostDetails({
+   )
+ }
+ 
+-function BackdatedPostIndicator({post}: {post: AppBskyFeedDefs.PostView}) {
++function BackdatedPostIndicator({ post }: { post: AppBskyFeedDefs.PostView }) {
+   const t = useTheme()
+-  const {_, i18n} = useLingui()
++  const { _, i18n } = useLingui()
+   const control = Prompt.usePromptControl()
+ 
+   const indexedAt = new Date(post.indexedAt)
+@@ -645,7 +649,7 @@ function BackdatedPostIndicator({post}: {post: AppBskyFeedDefs.PostView}) {
+           e.stopPropagation()
+           control.open()
+         }}>
+-        {({hovered, pressed}) => (
++        {({ hovered, pressed }) => (
+           <View
+             style={[
+               a.flex_row,
+@@ -702,7 +706,7 @@ function BackdatedPostIndicator({post}: {post: AppBskyFeedDefs.PostView}) {
+           </Trans>
+         </Text>
+         <Prompt.Actions>
+-          <Prompt.Action cta={_(msg`Okay`)} onPress={() => {}} />
++          <Prompt.Action cta={_(msg`Okay`)} onPress={() => { }} />
+         </Prompt.Actions>
+       </Prompt.Outer>
+     </>
+@@ -730,17 +734,17 @@ export function ThreadItemAnchorSkeleton() {
+         <Skele.Circle size={42} />
+ 
+         <Skele.Col>
+-          <Skele.Text style={[a.text_lg, {width: '20%'}]} />
+-          <Skele.Text blend style={[a.text_md, {width: '40%'}]} />
++          <Skele.Text style={[a.text_lg, { width: '20%' }]} />
++          <Skele.Text blend style={[a.text_md, { width: '40%' }]} />
+         </Skele.Col>
+       </Skele.Row>
+ 
+       <View>
+-        <Skele.Text style={[a.text_xl, {width: '100%'}]} />
+-        <Skele.Text style={[a.text_xl, {width: '60%'}]} />
++        <Skele.Text style={[a.text_xl, { width: '100%' }]} />
++        <Skele.Text style={[a.text_xl, { width: '60%' }]} />
+       </View>
+ 
+-      <Skele.Text style={[a.text_sm, {width: '50%'}]} />
++      <Skele.Text style={[a.text_sm, { width: '50%' }]} />
+ 
+       <PostControlsSkeleton big />
+     </View>
+diff --git a/src/screens/PostThread/components/ThreadItemPost.tsx b/src/screens/PostThread/components/ThreadItemPost.tsx
+index eccc7be2c..35f455a9d 100644
+--- a/src/screens/PostThread/components/ThreadItemPost.tsx
++++ b/src/screens/PostThread/components/ThreadItemPost.tsx
+@@ -1,52 +1,57 @@
+-import {memo, type ReactNode, useCallback, useMemo, useState} from 'react'
+-import {View} from 'react-native'
++import { memo, type ReactNode, useCallback, useMemo, useState } from 'react'
++import { View } from 'react-native'
+ import {
++  AppBskyEmbedImages,
++  AppBskyEmbedRecordWithMedia,
++  AppBskyEmbedVideo,
+   type AppBskyFeedDefs,
+   type AppBskyFeedThreadgate,
+   AtUri,
+   RichText as RichTextAPI,
+ } from '@atproto/api'
+-import {Trans} from '@lingui/macro'
++import { Trans } from '@lingui/macro'
+ 
+-import {useActorStatus} from '#/lib/actor-status'
+-import {MAX_POST_LINES} from '#/lib/constants'
+-import {useOpenComposer} from '#/lib/hooks/useOpenComposer'
+-import {makeProfileLink} from '#/lib/routes/links'
+-import {countLines} from '#/lib/strings/helpers'
++import { useActorStatus } from '#/lib/actor-status'
++import { MAX_POST_LINES } from '#/lib/constants'
++import { useOpenComposer } from '#/lib/hooks/useOpenComposer'
++import { makeProfileLink } from '#/lib/routes/links'
++import { countLines } from '#/lib/strings/helpers'
+ import {
+   POST_TOMBSTONE,
+   type Shadow,
+   usePostShadow,
+ } from '#/state/cache/post-shadow'
+-import {type ThreadItem} from '#/state/queries/usePostThread/types'
+-import {useSession} from '#/state/session'
+-import {type OnPostSuccessData} from '#/state/shell/composer'
+-import {useMergedThreadgateHiddenReplies} from '#/state/threadgate-hidden-replies'
+-import {PostMeta} from '#/view/com/util/PostMeta'
+-import {PreviewableUserAvatar} from '#/view/com/util/UserAvatar'
++import { type ThreadItem } from '#/state/queries/usePostThread/types'
++import { useSession } from '#/state/session'
++import { type OnPostSuccessData } from '#/state/shell/composer'
++import { useMergedThreadgateHiddenReplies } from '#/state/threadgate-hidden-replies'
++import { PostMeta } from '#/view/com/util/PostMeta'
++import { PreviewableUserAvatar } from '#/view/com/util/UserAvatar'
+ import {
+   LINEAR_AVI_WIDTH,
+   OUTER_SPACE,
+   REPLY_LINE_WIDTH,
+ } from '#/screens/PostThread/const'
+-import {atoms as a, useTheme} from '#/alf'
+-import {DebugFieldDisplay} from '#/components/DebugFieldDisplay'
+-import {useInteractionState} from '#/components/hooks/useInteractionState'
+-import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
+-import {LabelsOnMyPost} from '#/components/moderation/LabelsOnMe'
+-import {PostAlerts} from '#/components/moderation/PostAlerts'
+-import {PostHider} from '#/components/moderation/PostHider'
+-import {type AppModerationCause} from '#/components/Pills'
+-import {Embed, PostEmbedViewContext} from '#/components/Post/Embed'
+-import {ShowMoreTextButton} from '#/components/Post/ShowMoreTextButton'
+-import {PostControls, PostControlsSkeleton} from '#/components/PostControls'
+-import {RichText} from '#/components/RichText'
++import { atoms as a, useTheme } from '#/alf'
++import { DebugFieldDisplay } from '#/components/DebugFieldDisplay'
++import { useInteractionState } from '#/components/hooks/useInteractionState'
++import { Trash_Stroke2_Corner0_Rounded as TrashIcon } from '#/components/icons/Trash'
++import { LabelsOnMyPost } from '#/components/moderation/LabelsOnMe'
++import { PostAlerts } from '#/components/moderation/PostAlerts'
++import { PostHider } from '#/components/moderation/PostHider'
++import { type AppModerationCause } from '#/components/Pills'
++import { Embed, PostEmbedViewContext } from '#/components/Post/Embed'
++import { ReplyOverlay } from '#/components/ReplyOverlay'
++import { useReplyMediaQuery } from '#/state/queries/reply-media'
++import { ShowMoreTextButton } from '#/components/Post/ShowMoreTextButton'
++import { PostControls, PostControlsSkeleton } from '#/components/PostControls'
++import { RichText } from '#/components/RichText'
+ import * as Skele from '#/components/Skeleton'
+-import {SubtleHover} from '#/components/SubtleHover'
+-import {Text} from '#/components/Typography'
++import { SubtleHover } from '#/components/SubtleHover'
++import { Text } from '#/components/Typography'
+ 
+ export type ThreadItemPostProps = {
+-  item: Extract<ThreadItem, {type: 'threadPost'}>
++  item: Extract<ThreadItem, { type: 'threadPost' }>
+   overrides?: {
+     moderation?: boolean
+     topBorder?: boolean
+@@ -67,6 +72,18 @@ export function ThreadItemPost({
+     return <ThreadItemPostDeleted item={item} overrides={overrides} />
+   }
+ 
++  // Hide media replies - they're accessible via overlay
++  const embed = item.value.post.embed
++  const hasMedia =
++    AppBskyEmbedImages.isView(embed) ||
++    AppBskyEmbedVideo.isView(embed) ||
++    (AppBskyEmbedRecordWithMedia.isView(embed) &&
++      (AppBskyEmbedImages.isView(embed.media) || AppBskyEmbedVideo.isView(embed.media)))
++
++  if (hasMedia) {
++    return null
++  }
++
+   return (
+     <ThreadItemPostInner
+       item={item}
+@@ -113,7 +130,7 @@ function ThreadItemPostDeleted({
+         </Text>
+       </View>
+ 
+-      <View style={[{height: 4}]} />
++      <View style={[{ height: 4 }]} />
+     </ThreadItemPostOuterWrapper>
+   )
+ }
+@@ -133,12 +150,12 @@ const ThreadItemPostOuterWrapper = memo(function ThreadItemPostOuterWrapper({
+     <View
+       style={[
+         showTopBorder && [a.border_t, t.atoms.border_contrast_low],
+-        {paddingHorizontal: OUTER_SPACE},
++        { paddingHorizontal: OUTER_SPACE },
+         // If there's no next child, add a little padding to bottom
+         !item.ui.showChildReplyLine &&
+-          !item.ui.precedesChildReadMore && {
+-            paddingBottom: OUTER_SPACE / 2,
+-          },
++        !item.ui.precedesChildReadMore && {
++          paddingBottom: OUTER_SPACE / 2,
++        },
+       ]}>
+       {children}
+     </View>
+@@ -154,8 +171,8 @@ const ThreadItemPostParentReplyLine = memo(
+   }: Pick<ThreadItemPostProps, 'item'>) {
+     const t = useTheme()
+     return (
+-      <View style={[a.flex_row, {height: 12}]}>
+-        <View style={{width: LINEAR_AVI_WIDTH}}>
++      <View style={[a.flex_row, { height: 12 }]}>
++        <View style={{ width: LINEAR_AVI_WIDTH }}>
+           {item.ui.showParentReplyLine && (
+             <View
+               style={[
+@@ -185,12 +202,13 @@ const ThreadItemPostInner = memo(function ThreadItemPostInner({
+   postShadow: Shadow<AppBskyFeedDefs.PostView>
+ }) {
+   const t = useTheme()
+-  const {openComposer} = useOpenComposer()
+-  const {currentAccount} = useSession()
++  const { openComposer } = useOpenComposer()
++  const { currentAccount } = useSession()
+ 
+   const post = item.value.post
+   const record = item.value.post.record
+   const moderation = item.moderation
++  const { data: replyMedia = [] } = useReplyMediaQuery(post.uri)
+   const richText = useMemo(
+     () =>
+       new RichTextAPI({
+@@ -216,12 +234,12 @@ const ThreadItemPostInner = memo(function ThreadItemPostInner({
+       new AtUri(threadRootUri).host === currentAccount?.did
+     return isControlledByViewer && isPostHiddenByThreadgate
+       ? [
+-          {
+-            type: 'reply-hidden',
+-            source: {type: 'user', did: currentAccount?.did},
+-            priority: 6,
+-          },
+-        ]
++        {
++          type: 'reply-hidden',
++          source: { type: 'user', did: currentAccount?.did },
++          priority: 6,
++        },
++      ]
+       : []
+   }, [post, currentAccount?.did, threadgateHiddenReplies, threadRootUri])
+ 
+@@ -244,7 +262,7 @@ const ThreadItemPostInner = memo(function ThreadItemPostInner({
+     setLimitLines(false)
+   }, [setLimitLines])
+ 
+-  const {isActive: live} = useActorStatus(post.author)
++  const { isActive: live } = useActorStatus(post.author)
+ 
+   return (
+     <SubtleHoverWrapper>
+@@ -273,18 +291,18 @@ const ThreadItemPostInner = memo(function ThreadItemPostInner({
+ 
+               {(item.ui.showChildReplyLine ||
+                 item.ui.precedesChildReadMore) && (
+-                <View
+-                  style={[
+-                    a.mx_auto,
+-                    a.mt_xs,
+-                    a.flex_1,
+-                    {
+-                      width: REPLY_LINE_WIDTH,
+-                      backgroundColor: t.atoms.border_contrast_low.borderColor,
+-                    },
+-                  ]}
+-                />
+-              )}
++                  <View
++                    style={[
++                      a.mx_auto,
++                      a.mt_xs,
++                      a.flex_1,
++                      {
++                        width: REPLY_LINE_WIDTH,
++                        backgroundColor: t.atoms.border_contrast_low.borderColor,
++                      },
++                    ]}
++                  />
++                )}
+             </View>
+ 
+             <View style={[a.flex_1]}>
+@@ -320,12 +338,13 @@ const ThreadItemPostInner = memo(function ThreadItemPostInner({
+                 </>
+               ) : undefined}
+               {post.embed && (
+-                <View style={[a.pb_xs]}>
++                <View style={[a.pb_xs, { position: 'relative' }]}>
+                   <Embed
+                     embed={post.embed}
+                     moderation={moderation}
+                     viewContext={PostEmbedViewContext.Feed}
+                   />
++                  <ReplyOverlay replies={replyMedia} anchorUri={post.uri} />
+                 </View>
+               )}
+               <PostControls
+@@ -345,7 +364,7 @@ const ThreadItemPostInner = memo(function ThreadItemPostInner({
+   )
+ })
+ 
+-function SubtleHoverWrapper({children}: {children: ReactNode}) {
++function SubtleHoverWrapper({ children }: { children: ReactNode }) {
+   const {
+     state: hover,
+     onIn: onHoverIn,
+@@ -362,12 +381,12 @@ function SubtleHoverWrapper({children}: {children: ReactNode}) {
+   )
+ }
+ 
+-export function ThreadItemPostSkeleton({index}: {index: number}) {
++export function ThreadItemPostSkeleton({ index }: { index: number }) {
+   const even = index % 2 === 0
+   return (
+     <View
+       style={[
+-        {paddingHorizontal: OUTER_SPACE, paddingVertical: OUTER_SPACE / 1.5},
++        { paddingHorizontal: OUTER_SPACE, paddingVertical: OUTER_SPACE / 1.5 },
+         a.gap_md,
+       ]}>
+       <Skele.Row style={[a.align_start, a.gap_md]}>
+@@ -375,18 +394,18 @@ export function ThreadItemPostSkeleton({index}: {index: number}) {
+ 
+         <Skele.Col style={[a.gap_xs]}>
+           <Skele.Row style={[a.gap_sm]}>
+-            <Skele.Text style={[a.text_md, {width: '20%'}]} />
+-            <Skele.Text blend style={[a.text_md, {width: '30%'}]} />
++            <Skele.Text style={[a.text_md, { width: '20%' }]} />
++            <Skele.Text blend style={[a.text_md, { width: '30%' }]} />
+           </Skele.Row>
+ 
+           <Skele.Col>
+             {even ? (
+               <>
+-                <Skele.Text blend style={[a.text_md, {width: '100%'}]} />
+-                <Skele.Text blend style={[a.text_md, {width: '60%'}]} />
++                <Skele.Text blend style={[a.text_md, { width: '100%' }]} />
++                <Skele.Text blend style={[a.text_md, { width: '60%' }]} />
+               </>
+             ) : (
+-              <Skele.Text blend style={[a.text_md, {width: '60%'}]} />
++              <Skele.Text blend style={[a.text_md, { width: '60%' }]} />
+             )}
+           </Skele.Col>
+ 
+diff --git a/src/screens/Search/Explore.tsx b/src/screens/Search/Explore.tsx
+index b3e26dcfd..24fb7b288 100644
+--- a/src/screens/Search/Explore.tsx
++++ b/src/screens/Search/Explore.tsx
+@@ -681,17 +681,17 @@ export function Explore({
+ 
+     // Dynamic module ordering
+ 
+-    i.push(topBorder)
+-    i.push(...interestsNuxModule)
++    /* i.push(topBorder) */
++    /* i.push(...interestsNuxModule) */
+ 
+     if (useFullExperience) {
+-      i.push(trendingTopicsModule)
+-      i.push(...suggestedFeedsModule)
+-      i.push(...suggestedFollowsModule)
+-      i.push(...suggestedStarterPacksModule)
+-      i.push(...feedPreviewsModule)
++      /* i.push(trendingTopicsModule) */
++      /* i.push(...suggestedFeedsModule) */
++      /* i.push(...suggestedFollowsModule) */
++      /* i.push(...suggestedStarterPacksModule) */
++      /* i.push(...feedPreviewsModule) */
+     } else {
+-      i.push(...suggestedFollowsModule)
++      /* i.push(...suggestedFollowsModule) */
+     }
+ 
+     return i
+diff --git a/src/screens/Settings/ContentAndMediaSettings.tsx b/src/screens/Settings/ContentAndMediaSettings.tsx
+index e1144d064..4b5ff4f5b 100644
+--- a/src/screens/Settings/ContentAndMediaSettings.tsx
++++ b/src/screens/Settings/ContentAndMediaSettings.tsx
+@@ -55,38 +55,38 @@ export function ContentAndMediaSettingsScreen({}: Props) {
+       </Layout.Header.Outer>
+       <Layout.Content>
+         <SettingsList.Container>
+-          <SettingsList.LinkItem
++          {/* <SettingsList.LinkItem
+             to="/settings/saved-feeds"
+             label={_(msg`Manage saved feeds`)}>
+             <SettingsList.ItemIcon icon={HashtagIcon} />
+             <SettingsList.ItemText>
+               <Trans>Manage saved feeds</Trans>
+             </SettingsList.ItemText>
+-          </SettingsList.LinkItem>
+-          <SettingsList.LinkItem
++          </SettingsList.LinkItem> */}
++          {/* <SettingsList.LinkItem
+             to="/settings/threads"
+             label={_(msg`Thread preferences`)}>
+             <SettingsList.ItemIcon icon={BubblesIcon} />
+             <SettingsList.ItemText>
+               <Trans>Thread preferences</Trans>
+             </SettingsList.ItemText>
+-          </SettingsList.LinkItem>
+-          <SettingsList.LinkItem
++          </SettingsList.LinkItem> */}
++          {/* <SettingsList.LinkItem
+             to="/settings/following-feed"
+             label={_(msg`Following feed preferences`)}>
+             <SettingsList.ItemIcon icon={HomeIcon} />
+             <SettingsList.ItemText>
+               <Trans>Following feed preferences</Trans>
+             </SettingsList.ItemText>
+-          </SettingsList.LinkItem>
+-          <SettingsList.LinkItem
++          </SettingsList.LinkItem> */}
++          {/* <SettingsList.LinkItem
+             to="/settings/external-embeds"
+             label={_(msg`External media`)}>
+             <SettingsList.ItemIcon icon={MacintoshIcon} />
+             <SettingsList.ItemText>
+               <Trans>External media</Trans>
+             </SettingsList.ItemText>
+-          </SettingsList.LinkItem>
++          </SettingsList.LinkItem> */}
+           <SettingsList.LinkItem
+             to="/settings/interests"
+             label={_(msg`Your interests`)}>
+diff --git a/src/state/queries/reply-media.ts b/src/state/queries/reply-media.ts
+index 027b32059..42742f2cd 100644
+--- a/src/state/queries/reply-media.ts
++++ b/src/state/queries/reply-media.ts
+@@ -1,10 +1,10 @@
+-import { useQuery } from '@tanstack/react-query'
+ import {
+     AppBskyEmbedImages,
+     AppBskyEmbedRecordWithMedia,
+     AppBskyEmbedVideo,
+     type AppBskyFeedDefs,
+ } from '@atproto/api'
++import { useQuery } from '@tanstack/react-query'
+ 
+ import { useAgent } from '#/state/session'
+ 
+@@ -53,9 +53,11 @@ export function useReplyMediaQuery(postUri: string | undefined) {
+                     const post = value.post as AppBskyFeedDefs.PostView | undefined
+                     if (!post) continue
+ 
+-                    // Skip the anchor post (depth 0) or by URI match
++                    // Skip only the anchor post - include parents and replies
++                    // Check by URI first (most reliable), then by depth
++                    if (post.uri === postUri) continue
+                     const depth = (item as any).depth
+-                    if (depth === 0 || post.uri === postUri) continue
++                    if (depth === 0 || depth === undefined) continue
+ 
+                     // Skip duplicates
+                     if (repliesWithMedia.some(r => r.uri === post.uri)) continue
+@@ -66,7 +68,7 @@ export function useReplyMediaQuery(postUri: string | undefined) {
+                     }
+                 }
+ 
+-                console.log('[ReplyMediaQuery] Found replies with media:', repliesWithMedia.length)
++                // console.log('[ReplyMediaQuery] Found replies with media:', repliesWithMedia.length)
+                 return repliesWithMedia.slice(0, 9) // Max 9
+             } catch (error) {
+                 console.error('Failed to fetch reply media:', error)
+diff --git a/src/state/queries/resolve-uri.ts b/src/state/queries/resolve-uri.ts
+index b40e38072..404020785 100644
+--- a/src/state/queries/resolve-uri.ts
++++ b/src/state/queries/resolve-uri.ts
+@@ -6,6 +6,7 @@ import {
+ } from '@tanstack/react-query'
+ 
+ import {STALE} from '#/state/queries'
++import {ensureHandleSuffix} from '#/lib/strings/handles'
+ import {useAgent} from '#/state/session'
+ import {useUnstableProfileViewCache} from './profile'
+ 
+@@ -39,7 +40,9 @@ export function useResolveDidQuery(didOrHandle: string | undefined) {
+       // Just return the did if it's already one
+       if (didOrHandle.startsWith('did:')) return didOrHandle
+ 
+-      const res = await agent.resolveHandle({handle: didOrHandle})
++      // Add default suffix if handle has no dot
++      const handleToResolve = ensureHandleSuffix(didOrHandle)
++      const res = await agent.resolveHandle({handle: handleToResolve})
+       return res.data.did
+     },
+     initialData: () => {
+diff --git a/src/view/com/home/HomeHeaderLayout.web.tsx b/src/view/com/home/HomeHeaderLayout.web.tsx
+index b12ab69b7..f82aaeb2e 100644
+--- a/src/view/com/home/HomeHeaderLayout.web.tsx
++++ b/src/view/com/home/HomeHeaderLayout.web.tsx
+@@ -51,6 +51,7 @@ function HomeHeaderLayoutDesktopAndTablet({
+             <View style={[a.flex_1, a.align_center, a.justify_center]}>
+               <Logo width={kawaii ? 60 : 28} />
+             </View>
++            {/*
+             <Link
+               to="/feeds"
+               hitSlop={10}
+@@ -62,6 +63,7 @@ function HomeHeaderLayoutDesktopAndTablet({
+               style={[a.justify_center]}>
+               <ButtonIcon icon={FeedsIcon} size="lg" />
+             </Link>
++            */}
+           </View>
+         </Layout.Center>
+       )}
+diff --git a/src/view/com/home/HomeHeaderLayoutMobile.tsx b/src/view/com/home/HomeHeaderLayoutMobile.tsx
+index ef1e93837..5d796e9e4 100644
+--- a/src/view/com/home/HomeHeaderLayoutMobile.tsx
++++ b/src/view/com/home/HomeHeaderLayoutMobile.tsx
+@@ -1,22 +1,22 @@
+-import {type JSX} from 'react'
+-import {View} from 'react-native'
++import { type JSX } from 'react'
++import { View } from 'react-native'
+ import Animated from 'react-native-reanimated'
+-import {msg} from '@lingui/macro'
+-import {useLingui} from '@lingui/react'
++import { msg } from '@lingui/macro'
++import { useLingui } from '@lingui/react'
+ 
+-import {HITSLOP_10} from '#/lib/constants'
+-import {PressableScale} from '#/lib/custom-animations/PressableScale'
+-import {useHaptics} from '#/lib/haptics'
+-import {useMinimalShellHeaderTransform} from '#/lib/hooks/useMinimalShellTransform'
+-import {emitSoftReset} from '#/state/events'
+-import {useSession} from '#/state/session'
+-import {useShellLayout} from '#/state/shell/shell-layout'
+-import {Logo} from '#/view/icons/Logo'
+-import {atoms as a, useTheme} from '#/alf'
+-import {ButtonIcon} from '#/components/Button'
+-import {Hashtag_Stroke2_Corner0_Rounded as FeedsIcon} from '#/components/icons/Hashtag'
++import { HITSLOP_10 } from '#/lib/constants'
++import { PressableScale } from '#/lib/custom-animations/PressableScale'
++import { useHaptics } from '#/lib/haptics'
++import { useMinimalShellHeaderTransform } from '#/lib/hooks/useMinimalShellTransform'
++import { emitSoftReset } from '#/state/events'
++import { useSession } from '#/state/session'
++import { useShellLayout } from '#/state/shell/shell-layout'
++import { Logo } from '#/view/icons/Logo'
++import { atoms as a, useTheme } from '#/alf'
++import { ButtonIcon } from '#/components/Button'
++import { Hashtag_Stroke2_Corner0_Rounded as FeedsIcon } from '#/components/icons/Hashtag'
+ import * as Layout from '#/components/Layout'
+-import {Link} from '#/components/Link'
++import { Link } from '#/components/Link'
+ 
+ export function HomeHeaderLayoutMobile({
+   children,
+@@ -25,10 +25,10 @@ export function HomeHeaderLayoutMobile({
+   tabBarAnchor: JSX.Element | null | undefined
+ }) {
+   const t = useTheme()
+-  const {_} = useLingui()
+-  const {headerHeight} = useShellLayout()
++  const { _ } = useLingui()
++  const { headerHeight } = useShellLayout()
+   const headerMinimalShellTransform = useMinimalShellHeaderTransform()
+-  const {hasSession} = useSession()
++  const { hasSession } = useSession()
+   const playHaptic = useHaptics()
+ 
+   return (
+@@ -64,7 +64,7 @@ export function HomeHeaderLayoutMobile({
+         </View>
+ 
+         <Layout.Header.Slot>
+-          {hasSession && (
++          {/* hasSession && (
+             <Link
+               testID="viewHeaderHomeFeedPrefsBtn"
+               to={{screen: 'Feeds'}}
+@@ -81,7 +81,7 @@ export function HomeHeaderLayoutMobile({
+               ]}>
+               <ButtonIcon icon={FeedsIcon} size="lg" />
+             </Link>
+-          )}
++          ) */}
+         </Layout.Header.Slot>
+       </Layout.Header.Outer>
+       {children}
+diff --git a/src/view/com/posts/PostFeed.tsx b/src/view/com/posts/PostFeed.tsx
+index 4f25468c9..40bf63f69 100644
+--- a/src/view/com/posts/PostFeed.tsx
++++ b/src/view/com/posts/PostFeed.tsx
+@@ -22,24 +22,27 @@ import {
+   type AppBskyActorDefs,
+   AppBskyEmbedVideo,
+   type AppBskyFeedDefs,
++
++  AppBskyEmbedImages,
++  AppBskyEmbedRecordWithMedia
+ } from '@atproto/api'
+-import {msg} from '@lingui/macro'
+-import {useLingui} from '@lingui/react'
+-import {useQueryClient} from '@tanstack/react-query'
++import { msg } from '@lingui/macro'
++import { useLingui } from '@lingui/react'
++import { useQueryClient } from '@tanstack/react-query'
+ 
+-import {isStatusStillActive, validateStatus} from '#/lib/actor-status'
+-import {DISCOVER_FEED_URI, KNOWN_SHUTDOWN_FEEDS} from '#/lib/constants'
+-import {useInitialNumToRender} from '#/lib/hooks/useInitialNumToRender'
+-import {useNonReactiveCallback} from '#/lib/hooks/useNonReactiveCallback'
+-import {logEvent, useGate} from '#/lib/statsig/statsig'
+-import {isNetworkError} from '#/lib/strings/errors'
+-import {logger} from '#/logger'
+-import {isIOS, isNative, isWeb} from '#/platform/detection'
+-import {usePostAuthorShadowFilter} from '#/state/cache/profile-shadow'
+-import {listenPostCreated} from '#/state/events'
+-import {useFeedFeedbackContext} from '#/state/feed-feedback'
+-import {useTrendingSettings} from '#/state/preferences/trending'
+-import {STALE} from '#/state/queries'
++import { isStatusStillActive, validateStatus } from '#/lib/actor-status'
++import { DISCOVER_FEED_URI, KNOWN_SHUTDOWN_FEEDS } from '#/lib/constants'
++import { useInitialNumToRender } from '#/lib/hooks/useInitialNumToRender'
++import { useNonReactiveCallback } from '#/lib/hooks/useNonReactiveCallback'
++import { logEvent, useGate } from '#/lib/statsig/statsig'
++import { isNetworkError } from '#/lib/strings/errors'
++import { logger } from '#/logger'
++import { isIOS, isNative, isWeb } from '#/platform/detection'
++import { usePostAuthorShadowFilter } from '#/state/cache/profile-shadow'
++import { listenPostCreated } from '#/state/events'
++import { useFeedFeedbackContext } from '#/state/feed-feedback'
++import { useTrendingSettings } from '#/state/preferences/trending'
++import { STALE } from '#/state/queries'
+ import {
+   type AuthorFilter,
+   type FeedDescriptor,
+@@ -50,111 +53,111 @@ import {
+   RQKEY,
+   usePostFeedQuery,
+ } from '#/state/queries/post-feed'
+-import {useLiveNowConfig} from '#/state/service-config'
+-import {useSession} from '#/state/session'
+-import {useProgressGuide} from '#/state/shell/progress-guide'
+-import {useSelectedFeed} from '#/state/shell/selected-feed'
+-import {List, type ListRef} from '#/view/com/util/List'
+-import {PostFeedLoadingPlaceholder} from '#/view/com/util/LoadingPlaceholder'
+-import {LoadMoreRetryBtn} from '#/view/com/util/LoadMoreRetryBtn'
+-import {type VideoFeedSourceContext} from '#/screens/VideoFeed/types'
+-import {useBreakpoints, useLayoutBreakpoints} from '#/alf'
++import { useLiveNowConfig } from '#/state/service-config'
++import { useSession } from '#/state/session'
++import { useProgressGuide } from '#/state/shell/progress-guide'
++import { useSelectedFeed } from '#/state/shell/selected-feed'
++import { List, type ListRef } from '#/view/com/util/List'
++import { PostFeedLoadingPlaceholder } from '#/view/com/util/LoadingPlaceholder'
++import { LoadMoreRetryBtn } from '#/view/com/util/LoadMoreRetryBtn'
++import { type VideoFeedSourceContext } from '#/screens/VideoFeed/types'
++import { useBreakpoints, useLayoutBreakpoints } from '#/alf'
+ import {
+   AgeAssuranceDismissibleFeedBanner,
+   useInternalState as useAgeAssuranceBannerState,
+ } from '#/components/ageAssurance/AgeAssuranceDismissibleFeedBanner'
+-import {ProgressGuide, SuggestedFollows} from '#/components/FeedInterstitials'
++import { ProgressGuide, SuggestedFollows } from '#/components/FeedInterstitials'
+ import {
+   PostFeedVideoGridRow,
+   PostFeedVideoGridRowPlaceholder,
+ } from '#/components/feeds/PostFeedVideoGridRow'
+-import {TrendingInterstitial} from '#/components/interstitials/Trending'
+-import {TrendingVideos as TrendingVideosInterstitial} from '#/components/interstitials/TrendingVideos'
+-import {ComposerPrompt} from '../feeds/ComposerPrompt'
+-import {DiscoverFallbackHeader} from './DiscoverFallbackHeader'
+-import {FeedShutdownMsg} from './FeedShutdownMsg'
+-import {PostFeedErrorMessage} from './PostFeedErrorMessage'
+-import {PostFeedItem} from './PostFeedItem'
+-import {ShowLessFollowup} from './ShowLessFollowup'
+-import {ViewFullThread} from './ViewFullThread'
++import { TrendingInterstitial } from '#/components/interstitials/Trending'
++import { TrendingVideos as TrendingVideosInterstitial } from '#/components/interstitials/TrendingVideos'
++import { ComposerPrompt } from '../feeds/ComposerPrompt'
++import { DiscoverFallbackHeader } from './DiscoverFallbackHeader'
++import { FeedShutdownMsg } from './FeedShutdownMsg'
++import { PostFeedErrorMessage } from './PostFeedErrorMessage'
++import { PostFeedItem } from './PostFeedItem'
++import { ShowLessFollowup } from './ShowLessFollowup'
++import { ViewFullThread } from './ViewFullThread'
+ 
+ type FeedRow =
+   | {
+-      type: 'loading'
+-      key: string
+-    }
++    type: 'loading'
++    key: string
++  }
+   | {
+-      type: 'empty'
+-      key: string
+-    }
++    type: 'empty'
++    key: string
++  }
+   | {
+-      type: 'error'
+-      key: string
+-    }
++    type: 'error'
++    key: string
++  }
+   | {
+-      type: 'loadMoreError'
+-      key: string
+-    }
++    type: 'loadMoreError'
++    key: string
++  }
+   | {
+-      type: 'feedShutdownMsg'
+-      key: string
+-    }
++    type: 'feedShutdownMsg'
++    key: string
++  }
+   | {
+-      type: 'fallbackMarker'
+-      key: string
+-    }
++    type: 'fallbackMarker'
++    key: string
++  }
+   | {
+-      type: 'sliceItem'
+-      key: string
+-      slice: FeedPostSlice
+-      indexInSlice: number
+-      showReplyTo: boolean
+-    }
++    type: 'sliceItem'
++    key: string
++    slice: FeedPostSlice
++    indexInSlice: number
++    showReplyTo: boolean
++  }
+   | {
+-      type: 'videoGridRowPlaceholder'
+-      key: string
+-    }
++    type: 'videoGridRowPlaceholder'
++    key: string
++  }
+   | {
+-      type: 'videoGridRow'
+-      key: string
+-      items: FeedPostSliceItem[]
+-      sourceFeedUri: string
+-      feedContexts: (string | undefined)[]
+-      reqIds: (string | undefined)[]
+-    }
++    type: 'videoGridRow'
++    key: string
++    items: FeedPostSliceItem[]
++    sourceFeedUri: string
++    feedContexts: (string | undefined)[]
++    reqIds: (string | undefined)[]
++  }
+   | {
+-      type: 'sliceViewFullThread'
+-      key: string
+-      uri: string
+-    }
++    type: 'sliceViewFullThread'
++    key: string
++    uri: string
++  }
+   | {
+-      type: 'interstitialFollows'
+-      key: string
+-    }
++    type: 'interstitialFollows'
++    key: string
++  }
+   | {
+-      type: 'interstitialProgressGuide'
+-      key: string
+-    }
++    type: 'interstitialProgressGuide'
++    key: string
++  }
+   | {
+-      type: 'interstitialTrending'
+-      key: string
+-    }
++    type: 'interstitialTrending'
++    key: string
++  }
+   | {
+-      type: 'interstitialTrendingVideos'
+-      key: string
+-    }
++    type: 'interstitialTrendingVideos'
++    key: string
++  }
+   | {
+-      type: 'showLessFollowup'
+-      key: string
+-    }
++    type: 'showLessFollowup'
++    key: string
++  }
+   | {
+-      type: 'ageAssuranceBanner'
+-      key: string
+-    }
++    type: 'ageAssuranceBanner'
++    key: string
++  }
+   | {
+-      type: 'composerPrompt'
+-      key: string
+-    }
++    type: 'composerPrompt'
++    key: string
++  }
+ 
+ export function getItemsForFeedback(feedRow: FeedRow): {
+   item: FeedPostSliceItem
+@@ -227,17 +230,17 @@ let PostFeed = ({
+   initialNumToRender?: number
+   isVideoFeed?: boolean
+ }): React.ReactNode => {
+-  const {_} = useLingui()
++  const { _ } = useLingui()
+   const queryClient = useQueryClient()
+-  const {currentAccount, hasSession} = useSession()
++  const { currentAccount, hasSession } = useSession()
+   const gate = useGate()
+   const initialNumToRender = useInitialNumToRender()
+   const feedFeedback = useFeedFeedbackContext()
+   const [isPTRing, setIsPTRing] = useState(false)
+   const lastFetchRef = useRef<number>(Date.now())
+   const [feedType, feedUriOrActorDid, feedTab] = feed.split('|')
+-  const {gtMobile} = useBreakpoints()
+-  const {rightNavVisible} = useLayoutBreakpoints()
++  const { gtMobile } = useBreakpoints()
++  const { rightNavVisible } = useLayoutBreakpoints()
+   const areVideoFeedsEnabled = isNative
+ 
+   const [hasPressedShowLessUris, setHasPressedShowLessUris] = useState(
+@@ -256,7 +259,7 @@ let PostFeed = ({
+ 
+   const feedCacheKey = feedParams?.feedCacheKey
+   const opts = useMemo(
+-    () => ({enabled, ignoreFilterFor}),
++    () => ({ enabled, ignoreFilterFor }),
+     [enabled, ignoreFilterFor],
+   )
+   const {
+@@ -299,7 +302,7 @@ let PostFeed = ({
+       }
+     } catch (e) {
+       if (!isNetworkError(e)) {
+-        logger.error('Poll latest failed', {feed, message: String(e)})
++        logger.error('Poll latest failed', { feed, message: String(e) })
+       }
+     }
+   })
+@@ -315,7 +318,7 @@ let PostFeed = ({
+       (feed === 'following' ||
+         feed === `author|${myDid}|posts_and_author_threads`)
+     ) {
+-      queryClient.invalidateQueries({queryKey: RQKEY(feed)})
++      queryClient.invalidateQueries({ queryKey: RQKEY(feed) })
+     }
+   }, [queryClient, feed, data, myDid])
+   useEffect(() => {
+@@ -360,7 +363,7 @@ let PostFeed = ({
+   const showProgressIntersitial =
+     (followProgressGuide || followAndLikeProgressGuide) && !rightNavVisible
+ 
+-  const {trendingDisabled, trendingVideoDisabled} = useTrendingSettings()
++  const { trendingDisabled, trendingVideoDisabled } = useTrendingSettings()
+ 
+   const ageAssuranceBannerState = useAgeAssuranceBannerState()
+   const selectedFeed = useSelectedFeed()
+@@ -378,7 +381,7 @@ let PostFeed = ({
+   const feedItems: FeedRow[] = useMemo(() => {
+     // wraps a slice item, and replaces it with a showLessFollowup item
+     // if the user has pressed show less on it
+-    const sliceItem = (row: Extract<FeedRow, {type: 'sliceItem'}>) => {
++    const sliceItem = (row: Extract<FeedRow, { type: 'sliceItem' }>) => {
+       if (hasPressedShowLessUris.has(row.slice.items[row.indexInSlice]?.uri)) {
+         return {
+           type: 'showLessFollowup',
+@@ -484,6 +487,35 @@ let PostFeed = ({
+         } else {
+           for (const page of data?.pages) {
+             for (const slice of page.slices) {
++              if (
++                feedKind === 'following' ||
++                feedKind === 'discover' ||
++                feedKind === 'profile'
++              ) {
++                let videoCount = 0
++                let imageCount = 0
++                for (const item of slice.items) {
++                  if (AppBskyEmbedVideo.isView(item.post.embed)) {
++                    videoCount++
++                  } else if (AppBskyEmbedImages.isView(item.post.embed)) {
++                    imageCount++
++                  } else if (
++                    AppBskyEmbedRecordWithMedia.isView(item.post.embed)
++                  ) {
++                    if (AppBskyEmbedVideo.isView(item.post.embed.media)) {
++                      videoCount++
++                    } else if (
++                      AppBskyEmbedImages.isView(item.post.embed.media)
++                    ) {
++                      imageCount++
++                    }
++                  }
++                }
++                if (videoCount < 1 || imageCount < 1) {
++                  continue
++                }
++              }
++
+               sliceIndex++
+ 
+               if (hasSession) {
+@@ -699,7 +731,7 @@ let PostFeed = ({
+       await refetch()
+       onHasNew?.(false)
+     } catch (err) {
+-      logger.error('Failed to refresh posts feed', {message: err})
++      logger.error('Failed to refresh posts feed', { message: err })
+     }
+     setIsPTRing(false)
+   }, [refetch, setIsPTRing, onHasNew, feed, feedType])
+@@ -715,7 +747,7 @@ let PostFeed = ({
+     try {
+       await fetchNextPage()
+     } catch (err) {
+-      logger.error('Failed to load more posts', {message: err})
++      logger.error('Failed to load more posts', { message: err })
+     }
+   }, [
+     isFetching,
+@@ -740,7 +772,7 @@ let PostFeed = ({
+   // =
+ 
+   const renderItem = useCallback(
+-    ({item: row, index: rowIndex}: ListRenderItemInfo<FeedRow>) => {
++    ({ item: row, index: rowIndex }: ListRenderItemInfo<FeedRow>) => {
+       if (row.type === 'empty') {
+         return renderEmptyState()
+       } else if (row.type === 'error') {
+@@ -787,6 +819,20 @@ let PostFeed = ({
+         const slice = row.slice
+         const indexInSlice = row.indexInSlice
+         const item = slice.items[indexInSlice]
++
++        // Hide media replies (not the first/root item) - accessible via overlay
++        if (indexInSlice > 0) {
++          const embed = item.post.embed
++          const hasMedia =
++            AppBskyEmbedImages.isView(embed) ||
++            AppBskyEmbedVideo.isView(embed) ||
++            (AppBskyEmbedRecordWithMedia.isView(embed) &&
++              (AppBskyEmbedImages.isView(embed.media) || AppBskyEmbedVideo.isView(embed.media)))
++          if (hasMedia) {
++            return null
++          }
++        }
++
+         return (
+           <PostFeedItem
+             post={item.post}
+@@ -877,12 +923,12 @@ let PostFeed = ({
+     return isFetchingNextPage ? (
+       <View style={[styles.feedFooter]}>
+         <ActivityIndicator />
+-        <View style={{height: offset}} />
++        <View style={{ height: offset }} />
+       </View>
+     ) : shouldRenderEndOfFeed ? (
+-      <View style={{minHeight: offset}}>{renderEndOfFeed()}</View>
++      <View style={{ minHeight: offset }}>{renderEndOfFeed()}</View>
+     ) : (
+-      <View style={{height: offset}} />
++      <View style={{ height: offset }} />
+     )
+   }, [isFetchingNextPage, shouldRenderEndOfFeed, renderEndOfFeed, headerOffset])
+ 
+@@ -944,7 +990,7 @@ let PostFeed = ({
+               feedDescriptor: feedFeedback.feedDescriptor || feed,
+               position,
+             },
+-            {statsig: false},
++            { statsig: false },
+           )
+         }
+ 
+@@ -963,7 +1009,7 @@ let PostFeed = ({
+                 subject: actor.did,
+                 feed,
+               },
+-              {statsig: false},
++              { statsig: false },
+             )
+           }
+         }
+@@ -987,7 +1033,7 @@ let PostFeed = ({
+                 feedDescriptor: feedFeedback.feedDescriptor || feed,
+                 position,
+               },
+-              {statsig: false},
++              { statsig: false },
+             )
+           }
+         }
+@@ -1031,10 +1077,10 @@ let PostFeed = ({
+   )
+ }
+ PostFeed = memo(PostFeed)
+-export {PostFeed}
++export { PostFeed }
+ 
+ const styles = StyleSheet.create({
+-  feedFooter: {paddingTop: 20},
++  feedFooter: { paddingTop: 20 },
+ })
+ 
+ export function isThreadParentAt<T>(arr: Array<T>, i: number) {
+diff --git a/src/view/com/posts/PostFeedItem.tsx b/src/view/com/posts/PostFeedItem.tsx
+index 5b6ce7841..29d7102ad 100644
+--- a/src/view/com/posts/PostFeedItem.tsx
++++ b/src/view/com/posts/PostFeedItem.tsx
+@@ -1,5 +1,5 @@
+-import {memo, useCallback, useMemo, useState} from 'react'
+-import {StyleSheet, View} from 'react-native'
++import { memo, useCallback, useMemo, useState } from 'react'
++import { StyleSheet, View } from 'react-native'
+ import {
+   type AppBskyActorDefs,
+   AppBskyFeedDefs,
+@@ -9,60 +9,62 @@ import {
+   type ModerationDecision,
+   RichText as RichTextAPI,
+ } from '@atproto/api'
+-import {useNavigation} from '@react-navigation/native'
+-import {useQueryClient} from '@tanstack/react-query'
++import { useNavigation } from '@react-navigation/native'
++import { useQueryClient } from '@tanstack/react-query'
+ 
+-import {useActorStatus} from '#/lib/actor-status'
+-import {type ReasonFeedSource} from '#/lib/api/feed/types'
+-import {MAX_POST_LINES} from '#/lib/constants'
+-import {useOpenComposer} from '#/lib/hooks/useOpenComposer'
+-import {usePalette} from '#/lib/hooks/usePalette'
+-import {makeProfileLink} from '#/lib/routes/links'
+-import {type NavigationProp} from '#/lib/routes/types'
+-import {useGate} from '#/lib/statsig/statsig'
+-import {countLines} from '#/lib/strings/helpers'
+-import {logger} from '#/logger'
++import { useActorStatus } from '#/lib/actor-status'
++import { type ReasonFeedSource } from '#/lib/api/feed/types'
++import { MAX_POST_LINES } from '#/lib/constants'
++import { useOpenComposer } from '#/lib/hooks/useOpenComposer'
++import { usePalette } from '#/lib/hooks/usePalette'
++import { makeProfileLink } from '#/lib/routes/links'
++import { type NavigationProp } from '#/lib/routes/types'
++import { useGate } from '#/lib/statsig/statsig'
++import { countLines } from '#/lib/strings/helpers'
++import { logger } from '#/logger'
+ import {
+   POST_TOMBSTONE,
+   type Shadow,
+   usePostShadow,
+ } from '#/state/cache/post-shadow'
+-import {useFeedFeedbackContext} from '#/state/feed-feedback'
+-import {unstableCacheProfileView} from '#/state/queries/profile'
+-import {useSession} from '#/state/session'
+-import {useMergedThreadgateHiddenReplies} from '#/state/threadgate-hidden-replies'
++import { useFeedFeedbackContext } from '#/state/feed-feedback'
++import { unstableCacheProfileView } from '#/state/queries/profile'
++import { useSession } from '#/state/session'
++import { useMergedThreadgateHiddenReplies } from '#/state/threadgate-hidden-replies'
+ import {
+   buildPostSourceKey,
+   setUnstablePostSource,
+ } from '#/state/unstable-post-source'
+-import {Link} from '#/view/com/util/Link'
+-import {PostMeta} from '#/view/com/util/PostMeta'
+-import {PreviewableUserAvatar} from '#/view/com/util/UserAvatar'
+-import {atoms as a} from '#/alf'
+-import {ContentHider} from '#/components/moderation/ContentHider'
+-import {LabelsOnMyPost} from '#/components/moderation/LabelsOnMe'
+-import {PostAlerts} from '#/components/moderation/PostAlerts'
+-import {type AppModerationCause} from '#/components/Pills'
+-import {Embed} from '#/components/Post/Embed'
+-import {PostEmbedViewContext} from '#/components/Post/Embed/types'
+-import {PostRepliedTo} from '#/components/Post/PostRepliedTo'
+-import {ShowMoreTextButton} from '#/components/Post/ShowMoreTextButton'
+-import {PostControls} from '#/components/PostControls'
+-import {DiscoverDebug} from '#/components/PostControls/DiscoverDebug'
+-import {RichText} from '#/components/RichText'
+-import {SubtleHover} from '#/components/SubtleHover'
+-import {ENV} from '#/env'
++import { Link } from '#/view/com/util/Link'
++import { PostMeta } from '#/view/com/util/PostMeta'
++import { PreviewableUserAvatar } from '#/view/com/util/UserAvatar'
++import { atoms as a } from '#/alf'
++import { ContentHider } from '#/components/moderation/ContentHider'
++import { LabelsOnMyPost } from '#/components/moderation/LabelsOnMe'
++import { PostAlerts } from '#/components/moderation/PostAlerts'
++import { type AppModerationCause } from '#/components/Pills'
++import { Embed } from '#/components/Post/Embed'
++import { PostEmbedViewContext } from '#/components/Post/Embed/types'
++import { PostRepliedTo } from '#/components/Post/PostRepliedTo'
++import { ShowMoreTextButton } from '#/components/Post/ShowMoreTextButton'
++import { PostControls } from '#/components/PostControls'
++import { DiscoverDebug } from '#/components/PostControls/DiscoverDebug'
++import { RichText } from '#/components/RichText'
++import { ReplyOverlay } from '#/components/ReplyOverlay'
++import { useReplyMediaQuery } from '#/state/queries/reply-media'
++import { SubtleHover } from '#/components/SubtleHover'
++import { ENV } from '#/env'
+ import * as bsky from '#/types/bsky'
+-import {PostFeedReason} from './PostFeedReason'
++import { PostFeedReason } from './PostFeedReason'
+ 
+ interface FeedItemProps {
+   record: AppBskyFeedPost.Record
+   reason:
+-    | AppBskyFeedDefs.ReasonRepost
+-    | AppBskyFeedDefs.ReasonPin
+-    | ReasonFeedSource
+-    | {[k: string]: unknown; $type: string}
+-    | undefined
++  | AppBskyFeedDefs.ReasonRepost
++  | AppBskyFeedDefs.ReasonPin
++  | ReasonFeedSource
++  | { [k: string]: unknown; $type: string }
++  | undefined
+   moderation: ModerationDecision
+   parentAuthor: AppBskyActorDefs.ProfileViewBasic | undefined
+   showReplyTo: boolean
+@@ -163,10 +165,11 @@ let FeedItemInner = ({
+   onShowLess?: (interaction: AppBskyFeedDefs.Interaction) => void
+ }): React.ReactNode => {
+   const queryClient = useQueryClient()
+-  const {openComposer} = useOpenComposer()
++  const { openComposer } = useOpenComposer()
+   const navigation = useNavigation<NavigationProp>()
+   const pal = usePalette('default')
+   const gate = useGate()
++  const { data: replyMedia = [] } = useReplyMediaQuery(post.uri)
+ 
+   const [hover, setHover] = useState(false)
+ 
+@@ -174,7 +177,7 @@ let FeedItemInner = ({
+     const urip = new AtUri(post.uri)
+     return [makeProfileLink(post.author, 'post', urip.rkey), urip.rkey]
+   }, [post.uri, post.author])
+-  const {sendInteraction, feedSourceInfo, feedDescriptor} =
++  const { sendInteraction, feedSourceInfo, feedDescriptor } =
+     useFeedFeedbackContext()
+ 
+   const onPressReply = () => {
+@@ -292,7 +295,7 @@ let FeedItemInner = ({
+     ? rootPost.threadgate.record
+     : undefined
+ 
+-  const {isActive: live} = useActorStatus(post.author)
++  const { isActive: live } = useActorStatus(post.author)
+ 
+   const viaRepost = useMemo(() => {
+     if (AppBskyFeedDefs.isReasonRepost(reason) && reason.uri && reason.cid) {
+@@ -311,7 +314,7 @@ let FeedItemInner = ({
+       noFeedback
+       accessible={false}
+       onBeforePress={onBeforePress}
+-      dataSet={{feedContext}}
++      dataSet={{ feedContext }}
+       onPointerEnter={() => {
+         setHover(true)
+       }}
+@@ -319,8 +322,8 @@ let FeedItemInner = ({
+         setHover(false)
+       }}>
+       <SubtleHover hover={hover} />
+-      <View style={{flexDirection: 'row', gap: 10, paddingLeft: 8}}>
+-        <View style={{width: 42}}>
++      <View style={{ flexDirection: 'row', gap: 10, paddingLeft: 8 }}>
++        <View style={{ width: 42 }}>
+           {isThreadChild && (
+             <View
+               style={[
+@@ -370,13 +373,13 @@ let FeedItemInner = ({
+           )}
+         </View>
+         <View style={styles.layoutContent}>
+-          <PostMeta
++          {/* <PostMeta
+             author={post.author}
+             moderation={moderation}
+             timestamp={post.indexedAt}
+             postHref={href}
+             onOpenAuthor={onOpenAuthor}
+-          />
++          /> */}
+           {showReplyTo &&
+             (parentAuthor || isParentBlocked || isParentNotFound) && (
+               <PostRepliedTo
+@@ -386,15 +389,19 @@ let FeedItemInner = ({
+               />
+             )}
+           <LabelsOnMyPost post={post} />
+-          <PostContent
+-            moderation={moderation}
+-            richText={richText}
+-            postEmbed={post.embed}
+-            postAuthor={post.author}
+-            onOpenEmbed={onOpenEmbed}
+-            post={post}
+-            threadgateRecord={threadgateRecord}
+-          />
++          <View style={{ position: 'relative' }}>
++            <PostContent
++              moderation={moderation}
++              richText={richText}
++              postEmbed={post.embed}
++              postAuthor={post.author}
++              onOpenEmbed={onOpenEmbed}
++              post={post}
++              threadgateRecord={threadgateRecord}
++            />
++            {/* Reply media overlays */}
++            <ReplyOverlay replies={replyMedia} anchorUri={post.uri} />
++          </View>
+           <PostControls
+             post={post}
+             record={record}
+@@ -433,7 +440,7 @@ let PostContent = ({
+   post: AppBskyFeedDefs.PostView
+   threadgateRecord?: AppBskyFeedThreadgate.Record
+ }): React.ReactNode => {
+-  const {currentAccount} = useSession()
++  const { currentAccount } = useSession()
+   const [limitLines, setLimitLines] = useState(
+     () => countLines(richText.text) >= MAX_POST_LINES,
+   )
+@@ -452,12 +459,12 @@ let PostContent = ({
+       rootPostUri && new AtUri(rootPostUri).host === currentAccount?.did
+     return isControlledByViewer && isPostHiddenByThreadgate
+       ? [
+-          {
+-            type: 'reply-hidden',
+-            source: {type: 'user', did: currentAccount?.did},
+-            priority: 6,
+-          },
+-        ]
++        {
++          type: 'reply-hidden',
++          source: { type: 'user', did: currentAccount?.did },
++          priority: 6,
++        },
++      ]
+       : []
+   }, [post, currentAccount?.did, threadgateHiddenReplies])
+ 
+diff --git a/src/view/com/profile/ProfileMenu.tsx b/src/view/com/profile/ProfileMenu.tsx
+index 8cf6d2c96..766c85f1a 100644
+--- a/src/view/com/profile/ProfileMenu.tsx
++++ b/src/view/com/profile/ProfileMenu.tsx
+@@ -280,7 +280,7 @@ let ProfileMenu = ({
+ 
+           {hasSession && (
+             <>
+-              <Menu.Divider />
++              {/* <Menu.Divider /> */}
+               <Menu.Group>
+                 {!isSelf && (
+                   <>
+@@ -309,7 +309,7 @@ let ProfileMenu = ({
+                     )}
+                   </>
+                 )}
+-                <Menu.Item
++                {/* <Menu.Item
+                   testID="profileHeaderDropdownStarterPackAddRemoveBtn"
+                   label={_(msg`Add to starter packs`)}
+                   onPress={onPressAddToStarterPacks}>
+@@ -317,8 +317,8 @@ let ProfileMenu = ({
+                     <Trans>Add to starter packs</Trans>
+                   </Menu.ItemText>
+                   <Menu.ItemIcon icon={StarterPack} />
+-                </Menu.Item>
+-                <Menu.Item
++                </Menu.Item> */}
++                {/* <Menu.Item
+                   testID="profileHeaderDropdownListAddRemoveBtn"
+                   label={_(msg`Add to lists`)}
+                   onPress={onPressAddRemoveLists}>
+@@ -326,9 +326,9 @@ let ProfileMenu = ({
+                     <Trans>Add to lists</Trans>
+                   </Menu.ItemText>
+                   <Menu.ItemIcon icon={List} />
+-                </Menu.Item>
++                </Menu.Item> */}
+                 {isSelf && canGoLive && (
+-                  <Menu.Item
++                  {/* <Menu.Item
+                     testID="profileHeaderDropdownListAddRemoveBtn"
+                     label={
+                       status.isDisabled
+@@ -352,7 +352,7 @@ let ProfileMenu = ({
+                       )}
+                     </Menu.ItemText>
+                     <Menu.ItemIcon icon={LiveIcon} />
+-                  </Menu.Item>
++                  </Menu.Item> */}
+                 )}
+                 {verification.viewer.role === 'verifier' &&
+                   !verification.profile.isViewer &&
+@@ -440,7 +440,7 @@ let ProfileMenu = ({
+           )}
+           {devModeEnabled ? (
+             <>
+-              <Menu.Divider />
++              {/* <Menu.Divider /> */}
+               <Menu.Group>
+                 <Menu.Item
+                   testID="profileHeaderDropdownShareATURIBtn"
+diff --git a/src/view/screens/Profile.tsx b/src/view/screens/Profile.tsx
+index 5bb46f0d2..3171961b7 100644
+--- a/src/view/screens/Profile.tsx
++++ b/src/view/screens/Profile.tsx
+@@ -230,15 +230,15 @@ function ProfileScreenLoaded({
+ 
+   const sectionTitles = [
+     showFiltersTab ? _(msg`Labels`) : undefined,
+-    showListsTab && hasLabeler ? _(msg`Lists`) : undefined,
++    /* showListsTab && hasLabeler ? _(msg`Lists`) : undefined, */
+     showPostsTab ? _(msg`Posts`) : undefined,
+     showRepliesTab ? _(msg`Replies`) : undefined,
+-    showMediaTab ? _(msg`Media`) : undefined,
++    /* showMediaTab ? _(msg`Media`) : undefined, */
+     showVideosTab ? _(msg`Videos`) : undefined,
+     showLikesTab ? _(msg`Likes`) : undefined,
+-    showFeedsTab ? _(msg`Feeds`) : undefined,
+-    showStarterPacksTab ? _(msg`Starter Packs`) : undefined,
+-    showListsTab && !hasLabeler ? _(msg`Lists`) : undefined,
++    /* showFeedsTab ? _(msg`Feeds`) : undefined, */
++    /* showStarterPacksTab ? _(msg`Starter Packs`) : undefined, */
++    /* showListsTab && !hasLabeler ? _(msg`Lists`) : undefined, */
+   ].filter(Boolean) as string[]
+ 
+   let nextIndex = 0
+@@ -406,7 +406,7 @@ function ProfileScreenLoaded({
+               />
+             )
+           : null}
+-        {showListsTab && !!profile.associated?.labeler
++        {/* {showListsTab && !!profile.associated?.labeler
+           ? ({headerHeight, isFocused, scrollElRef}) => (
+               <ProfileLists
+                 ref={listsSectionRef}
+@@ -417,7 +417,7 @@ function ProfileScreenLoaded({
+                 setScrollViewTag={setScrollViewTag}
+               />
+             )
+-          : null}
++          : null} */}
+         {showPostsTab
+           ? ({headerHeight, isFocused, scrollElRef}) => (
+               <ProfileFeedSection
+@@ -458,7 +458,7 @@ function ProfileScreenLoaded({
+               />
+             )
+           : null}
+-        {showMediaTab
++        {/* {showMediaTab
+           ? ({headerHeight, isFocused, scrollElRef}) => (
+               <ProfileFeedSection
+                 ref={mediaSectionRef}
+@@ -483,7 +483,7 @@ function ProfileScreenLoaded({
+                 emptyStateIcon={ImageIcon}
+               />
+             )
+-          : null}
++          : null} */}
+         {showVideosTab
+           ? ({headerHeight, isFocused, scrollElRef}) => (
+               <ProfileFeedSection
+@@ -525,7 +525,7 @@ function ProfileScreenLoaded({
+               />
+             )
+           : null}
+-        {showFeedsTab
++        {/* {showFeedsTab
+           ? ({headerHeight, isFocused, scrollElRef}) => (
+               <ProfileFeedgens
+                 ref={feedsSectionRef}
+@@ -536,8 +536,8 @@ function ProfileScreenLoaded({
+                 setScrollViewTag={setScrollViewTag}
+               />
+             )
+-          : null}
+-        {showStarterPacksTab
++          : null} */}
++        {/* {showStarterPacksTab
+           ? ({headerHeight, isFocused, scrollElRef}) => (
+               <ProfileStarterPacks
+                 ref={starterPacksSectionRef}
+@@ -568,8 +568,8 @@ function ProfileScreenLoaded({
+                 emptyStateIcon={CircleAndSquareIcon}
+               />
+             )
+-          : null}
+-        {showListsTab && !profile.associated?.labeler
++          : null} */}
++        {/* {showListsTab && !profile.associated?.labeler
+           ? ({headerHeight, isFocused, scrollElRef}) => (
+               <ProfileLists
+                 ref={listsSectionRef}
+@@ -580,7 +580,7 @@ function ProfileScreenLoaded({
+                 setScrollViewTag={setScrollViewTag}
+               />
+             )
+-          : null}
++          : null} */}
+       </PagerWithHeader>
+       {hasSession && (
+         <FAB
+diff --git a/src/view/shell/Drawer.tsx b/src/view/shell/Drawer.tsx
+index f76147ccf..7104c1ee2 100644
+--- a/src/view/shell/Drawer.tsx
++++ b/src/view/shell/Drawer.tsx
+@@ -11,7 +11,7 @@ import {type PressableScale} from '#/lib/custom-animations/PressableScale'
+ import {useNavigationTabState} from '#/lib/hooks/useNavigationTabState'
+ import {getTabState, TabState} from '#/lib/routes/helpers'
+ import {type NavigationProp} from '#/lib/routes/types'
+-import {sanitizeHandle} from '#/lib/strings/handles'
++import {sanitizeHandle, stripHandleSuffix} from '#/lib/strings/handles'
+ import {colors} from '#/lib/styles'
+ import {isWeb} from '#/platform/detection'
+ import {emitSoftReset} from '#/state/events'
+@@ -92,7 +92,7 @@ let DrawerProfileCard = ({
+             emoji
+             style={[a.font_bold, a.text_xl, a.mt_2xs, a.leading_tight]}
+             numberOfLines={1}>
+-            {profile?.displayName || account.handle}
++            {profile?.displayName || stripHandleSuffix(account.handle)}
+           </Text>
+           {verification.showBadge && (
+             <View
+@@ -292,13 +292,13 @@ let DrawerContent = ({}: React.PropsWithoutRef<{}>): React.ReactNode => {
+           <>
+             <SearchMenuItem isActive={isAtSearch} onPress={onPressSearch} />
+             <HomeMenuItem isActive={isAtHome} onPress={onPressHome} />
+-            <ChatMenuItem isActive={isAtMessages} onPress={onPressMessages} />
++            {/* <ChatMenuItem isActive={isAtMessages} onPress={onPressMessages} /> */}
+             <NotificationsMenuItem
+               isActive={isAtNotifications}
+               onPress={onPressNotifications}
+             />
+-            <FeedsMenuItem isActive={isAtFeeds} onPress={onPressMyFeeds} />
+-            <ListsMenuItem onPress={onPressLists} />
++            {/* <FeedsMenuItem isActive={isAtFeeds} onPress={onPressMyFeeds} /> */}
++            {/* <ListsMenuItem onPress={onPressLists} /> */}
+             <BookmarksMenuItem
+               isActive={isAtBookmarks}
+               onPress={onPressBookmarks}
+@@ -312,7 +312,7 @@ let DrawerContent = ({}: React.PropsWithoutRef<{}>): React.ReactNode => {
+         ) : (
+           <>
+             <HomeMenuItem isActive={isAtHome} onPress={onPressHome} />
+-            <FeedsMenuItem isActive={isAtFeeds} onPress={onPressMyFeeds} />
++            {/* <FeedsMenuItem isActive={isAtFeeds} onPress={onPressMyFeeds} /> */}
+             <SearchMenuItem isActive={isAtSearch} onPress={onPressSearch} />
+           </>
+         )}
+diff --git a/src/view/shell/bottom-bar/BottomBar.tsx b/src/view/shell/bottom-bar/BottomBar.tsx
+index b404a8f38..f4e9ada0d 100644
+--- a/src/view/shell/bottom-bar/BottomBar.tsx
++++ b/src/view/shell/bottom-bar/BottomBar.tsx
+@@ -198,6 +198,7 @@ export function BottomBar({navigation}: BottomTabBarProps) {
+               accessibilityLabel={_(msg`Search`)}
+               accessibilityHint=""
+             />
++            {/*
+             <Btn
+               testID="bottomBarMessagesBtn"
+               icon={
+@@ -230,6 +231,7 @@ export function BottomBar({navigation}: BottomTabBarProps) {
+                   : ''
+               }
+             />
++            */}
+             <Btn
+               testID="bottomBarNotificationsBtn"
+               icon={
+diff --git a/src/view/shell/bottom-bar/BottomBarWeb.tsx b/src/view/shell/bottom-bar/BottomBarWeb.tsx
+index 37a8e45d4..4d370e7a3 100644
+--- a/src/view/shell/bottom-bar/BottomBarWeb.tsx
++++ b/src/view/shell/bottom-bar/BottomBarWeb.tsx
+@@ -116,6 +116,7 @@ export function BottomBarWeb() {
+ 
+           {hasSession && (
+             <>
++              {/*
+               <NavItem
+                 routeName="Messages"
+                 href="/messages"
+@@ -136,6 +137,7 @@ export function BottomBarWeb() {
+                   )
+                 }}
+               </NavItem>
++              */}
+               <NavItem
+                 routeName="Notifications"
+                 href="/notifications"
+diff --git a/src/view/shell/desktop/LeftNav.tsx b/src/view/shell/desktop/LeftNav.tsx
+index 32b85d083..1c793f44d 100644
+--- a/src/view/shell/desktop/LeftNav.tsx
++++ b/src/view/shell/desktop/LeftNav.tsx
+@@ -18,7 +18,7 @@ import {
+ } from '#/lib/routes/types'
+ import {useGate} from '#/lib/statsig/statsig'
+ import {sanitizeDisplayName} from '#/lib/strings/display-names'
+-import {isInvalidHandle, sanitizeHandle} from '#/lib/strings/handles'
++import {isInvalidHandle, sanitizeHandle, stripHandleSuffix} from '#/lib/strings/handles'
+ import {emitSoftReset} from '#/state/events'
+ import {useHomeBadge} from '#/state/home-badge'
+ import {useFetchHandle} from '#/state/queries/handle'
+@@ -164,7 +164,7 @@ function ProfileCard() {
+                           style={[a.font_bold, a.text_sm, a.leading_snug]}
+                           numberOfLines={1}>
+                           {sanitizeDisplayName(
+-                            profile.displayName || profile.handle,
++                            profile.displayName || stripHandleSuffix(profile.handle),
+                           )}
+                         </Text>
+                         <Text
+@@ -708,7 +708,10 @@ export function DesktopLeftNav() {
+             }
+             label={_(msg`Notifications`)}
+           />
++          {/*
+           <ChatNavItem />
++          */}
++          {/*
+           <NavItem
+             href="/feeds"
+             icon={
+@@ -727,6 +730,8 @@ export function DesktopLeftNav() {
+             }
+             label={_(msg`Feeds`)}
+           />
++          */}
++          {/*
+           <NavItem
+             href="/lists"
+             icon={
+@@ -745,6 +750,7 @@ export function DesktopLeftNav() {
+             }
+             label={_(msg`Lists`)}
+           />
++          */}
+           <NavItem
+             href="/saved"
+             icon={
+diff --git a/src/view/shell/desktop/RightNav.tsx b/src/view/shell/desktop/RightNav.tsx
+index 788df6e64..dff15744f 100644
+--- a/src/view/shell/desktop/RightNav.tsx
++++ b/src/view/shell/desktop/RightNav.tsx
+@@ -85,12 +85,12 @@ export function DesktopRightNav({routeName}: {routeName: string}) {
+ 
+       {hasSession && (
+         <>
+-          <DesktopFeeds />
+-          <ProgressGuideList />
++          {/* <DesktopFeeds /> */}
++          {/* <ProgressGuideList /> */}
+         </>
+       )}
+ 
+-      {showTrending && <SidebarTrendingTopics />}
++      {/* {showTrending && <SidebarTrendingTopics />} */}
+ 
+       <Text style={[a.leading_snug, t.atoms.text_contrast_low]}>
+         {hasSession && (
