@@ -1,5 +1,6 @@
 import {type NotificationReason} from '#/lib/hooks/useNotificationHandler'
 import {type FeedDescriptor} from '#/state/queries/post-feed'
+import {type LiveEventFeedMetricContext} from '#/features/liveEvents/types'
 
 export type MetricEvents = {
   // App events
@@ -244,6 +245,8 @@ export type MetricEvents = {
     isReply: boolean
   }
   'post:like': {
+    uri: string
+    authorDid: string
     doesLikerFollowPoster: boolean | undefined
     doesPosterFollowLiker: boolean | undefined
     likerClout: number | undefined
@@ -252,14 +255,20 @@ export type MetricEvents = {
     feedDescriptor?: string
   }
   'post:repost': {
+    uri: string
+    authorDid: string
     logContext: 'FeedItem' | 'PostThreadItem' | 'Post' | 'ImmersiveVideo'
     feedDescriptor?: string
   }
   'post:unlike': {
+    uri: string
+    authorDid: string
     logContext: 'FeedItem' | 'PostThreadItem' | 'Post' | 'ImmersiveVideo'
     feedDescriptor?: string
   }
   'post:unrepost': {
+    uri: string
+    authorDid: string
     logContext: 'FeedItem' | 'PostThreadItem' | 'Post' | 'ImmersiveVideo'
     feedDescriptor?: string
   }
@@ -788,4 +797,27 @@ export type MetricEvents = {
   }
   // user pressed the remove all data button
   'contacts:settings:removeData': {}
+
+  'liveEvents:feedBanner:seen': {
+    feed: string
+    context: LiveEventFeedMetricContext
+  }
+  'liveEvents:feedBanner:click': {
+    feed: string
+    context: LiveEventFeedMetricContext
+  }
+  'liveEvents:feedBanner:hide': {
+    feed: string
+    context: LiveEventFeedMetricContext
+  }
+  'liveEvents:feedBanner:unhide': {
+    feed: string
+    context: LiveEventFeedMetricContext
+  }
+  'liveEvents:hideAllFeedBanners': {
+    context: LiveEventFeedMetricContext
+  }
+  'liveEvents:unhideAllFeedBanners': {
+    context: LiveEventFeedMetricContext
+  }
 }
