@@ -334,19 +334,52 @@ def modify_post_feed_item():
         content = f.read()
     
     # Imports
+    if 'AppBskyEmbedImages' not in content:
+        # We need to add imports to the @atproto/api block
+        if "from '@atproto/api'" in content:
+            # We can use regex to safely add to the list
+            # But simple replacement might be easier if we target a known import like RichTextAPI
+            if 'RichText as RichTextAPI,' in content:
+                content = content.replace(
+                    'RichText as RichTextAPI,',
+                    'RichText as RichTextAPI,\n  AppBskyEmbedImages,\n  AppBskyEmbedRecordWithMedia,\n  AppBskyEmbedVideo,'
+                )
+            else:
+                # Fallback to replacing the first import we see or the block start
+                content = content.replace(
+                    "type AppBskyActorDefs,",
+                    "type AppBskyActorDefs,\n  AppBskyEmbedImages,\n  AppBskyEmbedRecordWithMedia,\n  AppBskyEmbedVideo,"
+                )
+
     if 'ReplyOverlay' not in content:
         content = content.replace(
             "import {RichText} from '#/components/RichText'",
             "import {RichText} from '#/components/RichText'\nimport {ReplyOverlay} from '#/components/ReplyOverlay'\nimport {useReplyMediaQuery} from '#/state/queries/reply-media'"
         )
 
-    # Query Hook
+    # Query Hook and hasMedia Logic
     if 'useReplyMediaQuery(' not in content:
         content = content.replace(
             "const onOpenAuthor = () => {",
             "const {data: replyMedia = []} = useReplyMediaQuery(post.uri)\n\n  const onOpenAuthor = () => {"
         )
     
+    # Inject hasMedia logic if not present
+    HAS_MEDIA_LOGIC = r'''
+  const embed = post.embed
+  const hasMedia =
+    AppBskyEmbedImages.isView(embed) ||
+    AppBskyEmbedVideo.isView(embed) ||
+    (AppBskyEmbedRecordWithMedia.isView(embed) &&
+      (AppBskyEmbedImages.isView(embed.media) || AppBskyEmbedVideo.isView(embed.media)))
+'''
+    if 'const hasMedia =' not in content:
+        # Insert after replyMedia definition
+        content = content.replace(
+            "const {data: replyMedia = []} = useReplyMediaQuery(post.uri)",
+            "const {data: replyMedia = []} = useReplyMediaQuery(post.uri)" + HAS_MEDIA_LOGIC
+        )
+
     # Render Overlay
     if '<ReplyOverlay' not in content:
         # We look for PostContent and wrap it
@@ -370,12 +403,24 @@ def modify_post_feed_item():
               post={post}
               threadgateRecord={threadgateRecord}
             />
-            <ReplyOverlay replies={replyMedia} anchorUri={post.uri} />
+            {hasMedia && <ReplyOverlay replies={replyMedia} anchorUri={post.uri} />}
           </View>'''
         
-        # NOTE: Updated to include anchorUri which was missing in original script but present in manual implementation
         content = content.replace(old_render, new_render)
-    
+    else:
+        # Fixup: replace post.embed check with hasMedia check if script runs again
+        if '{post.embed && <ReplyOverlay' in content:
+            content = content.replace(
+                '{post.embed && <ReplyOverlay',
+                '{hasMedia && <ReplyOverlay'
+            )
+        elif '<ReplyOverlay' in content and '{hasMedia &&' not in content:
+             # If just <ReplyOverlay ... /> exists (from v1 or v2 script)
+             content = content.replace(
+                 '<ReplyOverlay replies={replyMedia} anchorUri={post.uri} />',
+                 '{hasMedia && <ReplyOverlay replies={replyMedia} anchorUri={post.uri} />}'
+             )
+
     with open(POST_FEED_ITEM_FILE, 'w', encoding='utf-8') as f:
         f.write(content)
     print("Modified PostFeedItem.tsx")
