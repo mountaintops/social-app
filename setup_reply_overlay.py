@@ -310,20 +310,20 @@ def modify_post_feed():
         else:
             print("Could not find insertion point in PostFeed.tsx")
 
-    # Add Embed types for filtering
-    if 'AppBskyEmbedImages' not in content:
-        # Target the @atproto/api import block end
-        if "from '@atproto/api'" in content:
-            # We want to add the new imports to the import list
-            # The list usually ends with `} from '@atproto/api'`
-            
-            # Simple approach: Replace the closing line
+    # Add Embed types for filtering (check for import, not just usage)
+    # Look for 'AppBskyEmbedImages,' to detect import (has comma) vs usage (no comma after)
+    if 'AppBskyEmbedImages,' not in content:
+        # Target: insert AppBskyEmbedImages and AppBskyEmbedRecordWithMedia before AppBskyEmbedVideo
+        # The base file has:
+        #   AppBskyEmbedVideo,
+        #   type AppBskyFeedDefs,
+        if '  AppBskyEmbedVideo,' in content:
             content = content.replace(
-                "} from '@atproto/api'",
-                ", AppBskyEmbedImages, AppBskyEmbedRecordWithMedia, AppBskyEmbedVideo } from '@atproto/api'"
+                '  AppBskyEmbedVideo,',
+                '  AppBskyEmbedImages,\n  AppBskyEmbedRecordWithMedia,\n  AppBskyEmbedVideo,'
             )
         else:
-            print("Warning: could not find @atproto/api import to append to")
+            print("Warning: could not find AppBskyEmbedVideo import pattern in PostFeed.tsx")
 
     with open(POST_FEED_FILE, 'w', encoding='utf-8') as f:
         f.write(content)
@@ -444,12 +444,26 @@ def modify_thread_post():
     with open(THREAD_POST_FILE, 'r', encoding='utf-8') as f:
         content = f.read()
 
-    # Imports
+    # Imports for ReplyOverlay
     if 'ReplyOverlay' not in content:
         content = content.replace(
             "import {Embed, PostEmbedViewContext} from '#/components/Post/Embed'",
             "import {Embed, PostEmbedViewContext} from '#/components/Post/Embed'\nimport {ReplyOverlay} from '#/components/ReplyOverlay'\nimport {useReplyMediaQuery} from '#/state/queries/reply-media'"
         )
+
+    # Add Embed types for filtering (check for import, not just usage)
+    if 'AppBskyEmbedImages,' not in content:
+        # The base file has imports ending with:
+        #   RichText as RichTextAPI,
+        # } from '@atproto/api'
+        # We insert the new imports after RichText
+        if 'RichText as RichTextAPI,' in content:
+            content = content.replace(
+                'RichText as RichTextAPI,',
+                'RichText as RichTextAPI,\n  AppBskyEmbedImages,\n  AppBskyEmbedRecordWithMedia,\n  AppBskyEmbedVideo,'
+            )
+        else:
+            print("Warning: could not find RichText as RichTextAPI pattern in ThreadItemPost.tsx")
 
     # Logic to hide media replies
     if 'Hide media replies' not in content:
