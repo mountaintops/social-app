@@ -282,11 +282,12 @@ def main():
     process_file(p('src/view/shell/desktop/RightNav.tsx'), patterns=right_nav_patterns)
 
     # 9. ProfileMenu.tsx
-    profile_menu_patterns = [
-        ("Add to Starter Packs", (r'(<Menu\.Item\s+[^>]*testID="profileHeaderDropdownStarterPackAddRemoveBtn".*?</Menu\.Item>)', 'jsx')),
-        ("Add to Lists", (r'(<Menu\.Item\s+[^>]*testID="profileHeaderDropdownListAddRemoveBtn".*?</Menu\.Item>)', 'jsx'))
+    profile_menu_start_tags = ['<Menu.Item']
+    profile_menu_targets = [
+        'testID="profileHeaderDropdownStarterPackAddRemoveBtn"',
+        'testID="profileHeaderDropdownListAddRemoveBtn"'
     ]
-    process_file(p('src/view/com/profile/ProfileMenu.tsx'), patterns=profile_menu_patterns)
+    process_file(p('src/view/com/profile/ProfileMenu.tsx'), indent_config=(profile_menu_start_tags, profile_menu_targets))
 
     # Indentation Based files
     
