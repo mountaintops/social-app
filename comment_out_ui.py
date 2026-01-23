@@ -221,23 +221,21 @@ def main():
 
     # 2. Drawer.tsx
     # Reverted SearchMenuItem
-    drawer_patterns = [
-        ("Chat Menu Item", (r'(<ChatMenuItem\s+[^>]*/>)', 'jsx')),
-        ("Feeds Menu Item", (r'(<FeedsMenuItem\s+[^>]*/>)', 'jsx')),
-        ("Lists Menu Item", (r'(<ListsMenuItem\s+[^>]*/>)', 'jsx')),
-    ]
-    process_file(p('src/view/shell/Drawer.tsx'), patterns=drawer_patterns)
+    drawer_start_tags = ['<ChatMenuItem', '<FeedsMenuItem', '<ListsMenuItem']
+    drawer_targets = ['ChatMenuItem', 'FeedsMenuItem', 'ListsMenuItem']
+    process_file(p('src/view/shell/Drawer.tsx'), indent_config=(drawer_start_tags, drawer_targets))
 
     # 3. PostMenuItems.tsx
-    post_menu_patterns = [
-        ("Translate", (r'(<Menu\.Item\s+[^>]*testID="postDropdownTranslateBtn".*?</Menu\.Item>)', 'jsx')),
-        ("Copy Post Text", (r'(<Menu\.Item\s+[^>]*testID="postDropdownCopyTextBtn".*?</Menu\.Item>)', 'jsx')),
-        ("Show More Like This", (r'(<Menu\.Item\s+[^>]*testID="postDropdownShowMoreBtn".*?</Menu\.Item>)', 'jsx')),
-        ("Show Less Like This", (r'(<Menu\.Item\s+[^>]*testID="postDropdownShowLessBtn".*?</Menu\.Item>)', 'jsx')),
-        ("Mute Thread", (r'(<Menu\.Item\s+[^>]*testID="postDropdownMuteThreadBtn".*?</Menu\.Item>)', 'jsx')),
-        ("Assign Topic For Algo", (r'(<Menu\.Item\s+[^>]*testID="postDropdownReportMisclassificationBtn".*?</Menu\.Item>)', 'jsx')),
+    post_menu_start_tags = ['<Menu.Item']
+    post_menu_targets = [
+        'testID="postDropdownTranslateBtn"',
+        'testID="postDropdownCopyTextBtn"',
+        'testID="postDropdownShowMoreBtn"',
+        'testID="postDropdownShowLessBtn"',
+        'testID="postDropdownMuteThreadBtn"',
+        'testID="postDropdownReportMisclassificationBtn"',
     ]
-    process_file(p('src/components/PostControls/PostMenu/PostMenuItems.tsx'), patterns=post_menu_patterns)
+    process_file(p('src/components/PostControls/PostMenu/PostMenuItems.tsx'), indent_config=(post_menu_start_tags, post_menu_targets))
 
     # 4. ContentAndMediaSettings.tsx
     settings_patterns = [
@@ -274,12 +272,9 @@ def main():
 
     # 8. Desktop RightNav.tsx
     # Reverted Desktop Search
-    right_nav_patterns = [
-        ("Desktop Feeds", (r'(<DesktopFeeds />)', 'jsx')),
-        ("Sidebar Trending", (r'(\{showTrending && <SidebarTrendingTopics />\})', 'jsx')),
-        ("Progress Guide", (r'(<ProgressGuideList />)', 'jsx')),
-    ]
-    process_file(p('src/view/shell/desktop/RightNav.tsx'), patterns=right_nav_patterns)
+    right_nav_start_tags = ['<DesktopFeeds', '<SidebarTrendingTopics', '<ProgressGuideList']
+    right_nav_targets = ['DesktopFeeds', 'SidebarTrendingTopics', 'ProgressGuideList']
+    process_file(p('src/view/shell/desktop/RightNav.tsx'), indent_config=(right_nav_start_tags, right_nav_targets))
 
     # 9. ProfileMenu.tsx
     profile_menu_start_tags = ['<Menu.Item']
