@@ -13,23 +13,22 @@ EMBED_TYPES_PATH = os.path.join(SRC_DIR, 'components/Post/Embed/types.ts')
 IMAGE_EMBED_PATH = os.path.join(SRC_DIR, 'components/Post/Embed/ImageEmbed.tsx')
 VIDEO_EMBED_NATIVE_PATH = os.path.join(SRC_DIR, 'components/Post/Embed/VideoEmbed/index.tsx')
 VIDEO_EMBED_WEB_PATH = os.path.join(SRC_DIR, 'components/Post/Embed/VideoEmbed/index.web.tsx')
-
-def write_file(path, content):
-    with open(path, 'w', encoding='utf-8') as f:
-        f.write(content)
-    print(f"Created/Overwritten {path}")
-
-def read_file(path):
-    with open(path, 'r', encoding='utf-8') as f:
-        return f.read()
+POST_CONTROLS_PATH = os.path.join(SRC_DIR, 'components/PostControls/index.tsx')
 
 def write_file_content(path, content):
     with open(path, 'w', encoding='utf-8') as f:
         f.write(content)
     print(f"Updated {path}")
 
+def read_file(path):
+    if not os.path.exists(path):
+        print(f"Warning: File not found {path}")
+        return None
+    with open(path, 'r', encoding='utf-8') as f:
+        return f.read()
+
 def create_feed_masonry_row():
-    content = """import { memo } from 'react'
+    content = """import React, { memo } from 'react'
 import { View, StyleSheet } from 'react-native'
 
 interface FeedMasonryRowProps {
@@ -69,35 +68,29 @@ const styles = StyleSheet.create({
 
 export default memo(FeedMasonryRow)
 """
-    write_file(FEED_MASONRY_ROW_PATH, content)
+    write_file_content(FEED_MASONRY_ROW_PATH, content)
 
 def patch_post_feed():
     content = read_file(POST_FEED_PATH)
+    if not content: return
     
+    # 0. Add masonryRow to FeedRow type
+    if "type: 'masonryRow'" not in content.split('getItemsForFeedback')[0]:
+        content = content.replace(
+            "  | {",
+            "  | {\n    type: 'masonryRow'\n    key: string\n    leftItem: FeedRow | null\n    rightItem: FeedRow | null\n  }\n  | {",
+            1
+        )
+
     # 1. Ensure FeedMasonryRow is imported
     if "FeedMasonryRow" not in content:
         content = re.sub(
-            r"(import \{ PostFeedItem \} from '\./PostFeedItem')",
-            r"\1\nimport { FeedMasonryRow } from '#/components/feeds/FeedMasonryRow'",
+            r"import\s*\{\s*PostFeedItem\s*\}\s*from\s*'\./PostFeedItem'",
+            r"import {PostFeedItem} from './PostFeedItem'\nimport {FeedMasonryRow} from '#/components/feeds/FeedMasonryRow'",
             content
         )
 
-    # 2. Fix broken syntax for masonryRow if present (handling the specific error user might have faced)
-    # The pattern matches the broken object definition and replaces it
-    broken_pattern = r"type: 'masonryRow'\s+key: string\s+leftItem: FeedRow \| null\s+rightItem: FeedRow \| null\s+}\s+\|\s+{"
-    if re.search(broken_pattern, content):
-         # This specific fix depends on the context, assuming it was inside arr.push
-         # But in the full file provided earlier, it was inside FeedRow type AND logic
-         # Let's target the runtime push first
-         pass 
-         # Using a regex to fix the "type pasted into code" error
-         content = re.sub(
-             r"arr\.push\(\{\s+type: 'masonryRow'\s+key: string\s+leftItem: FeedRow \| null\s+rightItem: FeedRow \| null\s+\}\s+\|\s+\{",
-             r"arr.push({",
-             content
-         )
-
-    # 3. Add renderMasonryItem helper
+    # 2. Add renderMasonryItem helper
     if "const renderMasonryItem = useCallback" not in content:
         helper_code = """
   // Helper function to render individual items within masonry rows
@@ -141,37 +134,123 @@ def patch_post_feed():
   const renderItem"""
         content = content.replace("const renderItem", helper_code)
 
+    # 3. Inject Masonry Grouping Logic
+    if "const masonryArr: FeedRow[] = []" not in content:
+        masonry_logic = """
+    // Convert feed items to masonry layout (2 columns)
+    const masonryArr: FeedRow[] = []
+    let pendingSliceItem: FeedRow | null = null
+
+    for (const item of arr) {
+      if (item.type === 'sliceItem') {
+        if (pendingSliceItem === null) {
+          pendingSliceItem = item
+        } else {
+          // Pair two items into a masonry row
+          masonryArr.push({
+            type: 'masonryRow',
+            key: 'masonry-' + pendingSliceItem.key + '-' + item.key,
+            leftItem: pendingSliceItem,
+            rightItem: item,
+          })
+          pendingSliceItem = null
+        }
+      } else {
+        // Non-sliceItem: flush pending item first, then add full-width item
+        if (pendingSliceItem !== null) {
+          masonryArr.push({
+            type: 'masonryRow',
+            key: 'masonry-' + pendingSliceItem.key + '-solo',
+            leftItem: pendingSliceItem,
+            rightItem: null,
+          })
+          pendingSliceItem = null
+        }
+        masonryArr.push(item)
+      }
+    }
+
+    // Flush any remaining pending item
+    if (pendingSliceItem !== null) {
+      masonryArr.push({
+        type: 'masonryRow',
+        key: 'masonry-' + pendingSliceItem.key + '-solo',
+        leftItem: pendingSliceItem,
+        rightItem: null,
+      })
+    }
+
+    return masonryArr"""
+        
+        content = re.sub(
+            r"return arr\s*\}\, \[",
+            f"{masonry_logic}\n  }}, [",
+            content
+        )
+
+    # 4. Handle rendering of masonryRow
+    if "row.type === 'masonryRow'" not in content:
+        render_logic = """} else if (row.type === 'masonryRow') {
+        const leftItem = row.leftItem
+        const rightItem = row.rightItem
+        return (
+          <FeedMasonryRow
+            leftChild={leftItem ? renderMasonryItem(leftItem, feedFeedback, onPressShowLess) : null}
+            rightChild={rightItem ? renderMasonryItem(rightItem, feedFeedback, onPressShowLess) : null}
+          />
+        )
+      } else if (row.type === 'sliceItem') {"""
+        
+        content = content.replace("} else if (row.type === 'sliceItem') {", render_logic)
+        
     write_file_content(POST_FEED_PATH, content)
 
 def patch_post_feed_item():
     content = read_file(POST_FEED_ITEM_PATH)
+    if not content: return
 
-    # 1. Add isMasonryItem to FeedItemProps if not present (already there in source, but good to check)
+    # 1. Add isMasonryItem to FeedItemProps
+    if "isMasonryItem?:" not in content:
+        content = re.sub(
+            r"(hideTopBorder\?: boolean)",
+            r"\1\n  isMasonryItem?: boolean",
+            content
+        )
+
     # 2. Add isMasonryItem to destructured props in PostFeedItem
     if "isMasonryItem," not in content:
-        content = content.replace("onShowLess,", "onShowLess,\n  isMasonryItem,")
-        
-        # Add to FeedItemInner props
-        # We need to find the specific `onShowLess,` in PostFeedItem and FeedItemInner
-        # This simple replace might be too broad, let's use context
-        pass
+        content = re.sub(
+            r"(onShowLess,)(\s*)\}: FeedItemProps & \{",
+            r"\1\2  isMasonryItem,\2}: FeedItemProps & {",
+            content,
+            flags=re.DOTALL
+        )
 
-    # Better regex approach for Props destructuring
-    content = re.sub(
-        r"(onShowLess,\n\}: FeedItemProps & \{)",
-        r"onShowLess,\n  isMasonryItem,\n}: FeedItemProps & {",
-        content
-    )
-    
     # 3. Pass isMasonryItem to FeedItemInner
-    content = re.sub(
-        r"(onShowLess=\{onShowLess\}\n\s+/\>)",
-        r"onShowLess={onShowLess}\n        isMasonryItem={isMasonryItem}\n      />",
-        content
-    )
+    if "isMasonryItem={isMasonryItem}" not in content:
+        content = re.sub(
+            r"(onShowLess=\{onShowLess\})(\s*/>)",
+            r"\1\n        isMasonryItem={isMasonryItem}\2",
+            content,
+            flags=re.DOTALL
+        )
+    
+    # 4. Add isMasonryItem to FeedItemInner props
+    parts = content.split("let FeedItemInner =")
+    if len(parts) > 1:
+        inner_part = parts[1]
+        if "isMasonryItem," not in inner_part.split("}: FeedItemProps")[0]:
+            inner_part = re.sub(
+                r"(onShowLess,)(\s*)\}: FeedItemProps & \{",
+                r"\1\2  isMasonryItem,\2}: FeedItemProps & {",
+                inner_part,
+                count=1,
+                flags=re.DOTALL
+            )
+            content = parts[0] + "let FeedItemInner =" + inner_part
 
-    # 4. Handle outerStyles logic
-    if "const outerStyles = isMasonryItem" not in content:
+    # 5. Handle outerStyles logic in FeedItemInner
+    if "styles.masonryOuter" not in content:
         masonry_styles = """const outerStyles = isMasonryItem
     ? [
         styles.masonryOuter,
@@ -191,39 +270,79 @@ def patch_post_feed_item():
             hideTopBorder || isThreadChild ? 0 : StyleSheet.hairlineWidth,
         },
       ]"""
-        # Replace existing outerStyles definition
         content = re.sub(
-            r"const outerStyles = \[\s+styles\.outer,[\s\S]+?\]",
+            r"const outerStyles = \[\s*styles\.outer,[\s\S]+?\]",
             masonry_styles,
             content
         )
 
-    # 5. Pass isMasonryItem to PostContent
-    # Update PostContent props destructuring
-    content = re.sub(
-        r"(replyMedia \?:\s+AppBskyFeedDefs\.PostView\[\])",
-        r"\1\n  isMasonryItem?: boolean",
-        content
-    )
-    # Update PostContent call
-    if "isMasonryItem={isMasonryItem}" not in content:
+    # 6. PostContent: Add isMasonryItem prop to function signature
+    parts = content.split("let PostContent =")
+    if len(parts) > 1:
+        post_content_part = parts[1]
+        
+        if "isMasonryItem," not in post_content_part.split("}: {")[0]:
+             post_content_part = re.sub(
+                 r"(replyMedia\s*=\s*\[\],)(\s*)\}: \{",
+                 r"\1\2  isMasonryItem,\2}: {",
+                 post_content_part,
+                 count=1,
+                 flags=re.DOTALL
+             )
+        
+        if "isMasonryItem?:" not in post_content_part:
+            post_content_part = re.sub(
+                r"(replyMedia\?:.*?\])(\s*)\}\):",
+                r"\1\2  isMasonryItem?: boolean\2}):",
+                post_content_part,
+                count=1,
+                flags=re.DOTALL
+            )
+            
+        if "PostEmbedViewContext.Masonry" not in post_content_part:
+            post_content_part = post_content_part.replace(
+                "viewContext={PostEmbedViewContext.Feed}",
+                "viewContext={isMasonryItem ? PostEmbedViewContext.Masonry : PostEmbedViewContext.Feed}"
+            )
+            
+        content = parts[0] + "let PostContent =" + post_content_part
+
+    # 7. Pass isMasonryItem from FeedItemInner to PostContent
+    if "isMasonryItem={isMasonryItem}" not in content.split("let PostContent =")[0]:
          content = re.sub(
-             r"(replyMedia=\{replyMedia\}\n\s+/\>)",
-             r"replyMedia={replyMedia}\n              isMasonryItem={isMasonryItem}\n            />",
-             content
+             r"(replyMedia=\{replyMedia\})(\s*/>)",
+             r"\1\n              isMasonryItem={isMasonryItem}\2",
+             content,
+             count=1,
+             flags=re.DOTALL
          )
          
-    # Update PostEmbedViewContext usage
-    if "PostEmbedViewContext.Masonry" not in content:
-        content = content.replace(
-            "viewContext={PostEmbedViewContext.Feed}",
-            "viewContext={isMasonryItem ? PostEmbedViewContext.Masonry : PostEmbedViewContext.Feed}"
-        )
+    # 8. Ensure masonry styles are present
+    if "masonryOuter:" not in content:
+         content = re.sub(
+             r"(const styles = StyleSheet.create\(\{)",
+             r"""\1
+  // Masonry compact styles
+  masonryOuter: {
+    paddingHorizontal: 4,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    marginBottom: 4,
+    overflow: 'hidden',
+  },
+  masonryContent: {
+    padding: 8,
+  },
+""",
+             content
+         )
 
     write_file_content(POST_FEED_ITEM_PATH, content)
 
 def patch_embed_types():
     content = read_file(EMBED_TYPES_PATH)
+    if not content: return
     if "Masonry = 'Masonry'" not in content:
         content = content.replace(
             "FeedEmbedRecordWithMedia = 'FeedEmbedRecordWithMedia',",
@@ -233,6 +352,7 @@ def patch_embed_types():
 
 def patch_image_embed():
     content = read_file(IMAGE_EMBED_PATH)
+    if not content: return
     if "PostEmbedViewContext.Masonry" not in content:
         content = content.replace(
             "rest.viewContext === PostEmbedViewContext.ThreadHighlighted",
@@ -240,59 +360,97 @@ def patch_image_embed():
         )
     write_file_content(IMAGE_EMBED_PATH, content)
 
+def patch_post_controls():
+    content = read_file(POST_CONTROLS_PATH)
+    if not content: return
+    
+    # 1. Add sanitizeHandle import
+    if "sanitizeHandle" not in content:
+        content = content.replace(
+            "import * as Toast from '#/view/com/util/Toast'",
+            "import * as Toast from '#/view/com/util/Toast'\nimport {sanitizeHandle} from '#/lib/strings/handles'"
+        )
+
+    # 2. Add useTheme import to #/alf
+    if "useTheme" not in content:
+        if "import {atoms as a, useBreakpoints} from '#/alf'" in content:
+            content = content.replace(
+                "import {atoms as a, useBreakpoints} from '#/alf'",
+                "import {atoms as a, useBreakpoints, useTheme} from '#/alf'"
+            )
+        else:
+            content = content.replace(
+                "import {atoms as a,",
+                "import {atoms as a, useTheme,"
+            )
+
+    # 3. Add UserAvatar import
+    if "UserAvatar" not in content and "import {Reply as Bubble}" in content:
+        content = content.replace(
+            "import {Reply as Bubble}",
+            "import {UserAvatar} from '#/view/com/util/UserAvatar'\nimport {Reply as Bubble}"
+        )
+
+    # 4. Inject Avatar + Handle into JSX
+    if "marginLeft: 6" not in content:
+        pattern = r"(return \(\s*<View\s*style=\[[\s\S]*?a\.gap_sm,\s*style,\s*\]\s*>\s*)"
+        insertion = """      {/* Left side: Avatar + Handle (InlineTextPost style) */}
+      <View style={[a.flex_row, a.align_center, a.gap_sm, { flex: 1, marginLeft: 6 }]}>
+        <UserAvatar size={24} avatar={post.author.avatar} type="user" />
+        <PostControlButtonText style={[a.text_sm, t.atoms.text_contrast_medium]}>{sanitizeHandle(post.author.handle, "@")}</PostControlButtonText>
+      </View>
+"""
+        if re.search(pattern, content):
+            content = re.sub(pattern, r"\1" + insertion, content)
+
+    write_file_content(POST_CONTROLS_PATH, content)
+
 def patch_video_embeds():
     # Native
     content = read_file(VIDEO_EMBED_NATIVE_PATH)
-    
-    # Add CommonProps to interface
-    if "import {type CommonProps} from '../types'" not in content:
-         content = content.replace(
-             "import * as VideoFallback from './VideoEmbedInner/VideoFallback'",
-             "import * as VideoFallback from './VideoEmbedInner/VideoFallback'\nimport {type CommonProps, PostEmbedViewContext} from '../types'"
-         )
-
-    if ": Props" in content:
-        content = content.replace(": Props", ": Props & CommonProps")
-    
-    # Destructure viewContext
-    if "function VideoEmbed({embed}:" in content:
-        content = content.replace("function VideoEmbed({embed}:", "function VideoEmbed({embed, viewContext}:")
-    
-    # Logic for aspect ratio
-    if "const ratio = 1 / 2" in content:
-        content = re.sub(
-            r"const ratio = 1 / 2 // max of 1:2 ratio in feeds",
-            "const ratio = viewContext === PostEmbedViewContext.Masonry ? 0 : 1 / 2",
-            content
-        )
-    
-    write_file_content(VIDEO_EMBED_NATIVE_PATH, content)
-
-    # Web
-    content = read_file(VIDEO_EMBED_WEB_PATH)
-     # Add CommonProps to interface
-    if "import {ConstrainedImage}" in content: # Just a marker
-         if "import {type CommonProps}" not in content:
+    if content:
+        if "useTheme" not in content:
+            content = content.replace(
+                "import { atoms as a } from '#/alf'",
+                "import { atoms as a, useTheme } from '#/alf'"
+            )
+        if "PostEmbedViewContext" not in content:
              content = content.replace(
                  "import * as VideoFallback from './VideoEmbedInner/VideoFallback'",
                  "import * as VideoFallback from './VideoEmbedInner/VideoFallback'\nimport {type CommonProps, PostEmbedViewContext} from '../types'"
              )
+        if ": Props" in content and ": Props & CommonProps" not in content:
+            content = content.replace(": Props", ": Props & CommonProps")
+        if "function VideoEmbed({embed}:" in content:
+            content = content.replace("function VideoEmbed({embed}:", "function VideoEmbed({embed, viewContext}:")
+        if "viewContext === PostEmbedViewContext.Masonry" not in content:
+            content = re.sub(
+                r"const ratio = 1 / 2 // max of 1:2 ratio in feeds",
+                "const ratio = viewContext === PostEmbedViewContext.Masonry ? 0 : 1 / 2",
+                content
+            )
+        write_file_content(VIDEO_EMBED_NATIVE_PATH, content)
 
-    if "function VideoEmbed({embed}: {embed: AppBskyEmbedVideo.View})" in content:
-        content = content.replace(
-            "function VideoEmbed({embed}: {embed: AppBskyEmbedVideo.View})",
-            "function VideoEmbed({embed, viewContext}: {embed: AppBskyEmbedVideo.View} & CommonProps)"
-        )
-        
-    # Logic for aspect ratio
-    if "const ratio = 1 / 2" in content:
-        content = re.sub(
-            r"const ratio = 1 / 2 // max of 1:2 ratio in feeds",
-            "const ratio = viewContext === PostEmbedViewContext.Masonry ? 0 : 1 / 2",
-            content
-        )
-
-    write_file_content(VIDEO_EMBED_WEB_PATH, content)
+    # Web
+    content = read_file(VIDEO_EMBED_WEB_PATH)
+    if content:
+        if "PostEmbedViewContext" not in content:
+             content = content.replace(
+                 "import * as VideoFallback from './VideoEmbedInner/VideoFallback'",
+                 "import * as VideoFallback from './VideoEmbedInner/VideoFallback'\nimport {type CommonProps, PostEmbedViewContext} from '../types'"
+             )
+        if "function VideoEmbed({embed}: {embed: AppBskyEmbedVideo.View})" in content:
+            content = content.replace(
+                "function VideoEmbed({embed}: {embed: AppBskyEmbedVideo.View})",
+                "function VideoEmbed({embed, viewContext}: {embed: AppBskyEmbedVideo.View} & CommonProps)"
+            )
+        if "viewContext === PostEmbedViewContext.Masonry" not in content:
+            content = re.sub(
+                r"const ratio = 1 / 2 // max of 1:2 ratio in feeds",
+                "const ratio = viewContext === PostEmbedViewContext.Masonry ? 0 : 1 / 2",
+                content
+            )
+        write_file_content(VIDEO_EMBED_WEB_PATH, content)
 
 def main():
     print("Starting Masonry Feed Layout Installation...")
@@ -302,6 +460,7 @@ def main():
     patch_post_feed_item()
     patch_image_embed()
     patch_video_embeds()
+    patch_post_controls()
     print("Installation Complete!")
 
 if __name__ == "__main__":
