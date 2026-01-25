@@ -15,6 +15,8 @@ SCRIPT_MAP = {
     'G': {'file': 'remove_replied_to.py', 'desc': 'Remove "replied to" indicator'},
     'H': {'file': 'setup_inline_text_post.py', 'desc': 'Setup inline layout for text posts'},
     'I': {'file': 'setup_reply_overlay.py', 'desc': 'Setup reply overlay system'},
+    'J': {'file': 'process_feed_ui.py', 'desc': 'Process Feed UI (Hide elements / Text-only linking)'},
+    'K': {'file': 'setup_masonry_feed.py', 'desc': 'Setup masonry feed layout'},
 }
 
 def print_menu():

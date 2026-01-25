@@ -225,17 +225,17 @@ def main():
     drawer_targets = ['ChatMenuItem', 'FeedsMenuItem', 'ListsMenuItem']
     process_file(p('src/view/shell/Drawer.tsx'), indent_config=(drawer_start_tags, drawer_targets))
 
-    # 3. PostMenuItems.tsx
-    post_menu_start_tags = ['<Menu.Item']
-    post_menu_targets = [
-        'testID="postDropdownTranslateBtn"',
-        'testID="postDropdownCopyTextBtn"',
-        'testID="postDropdownShowMoreBtn"',
-        'testID="postDropdownShowLessBtn"',
-        'testID="postDropdownMuteThreadBtn"',
-        'testID="postDropdownReportMisclassificationBtn"',
-    ]
-    process_file(p('src/components/PostControls/PostMenu/PostMenuItems.tsx'), indent_config=(post_menu_start_tags, post_menu_targets))
+    # 3. PostMenuItems.tsx - MOVED TO process_feed_ui.py due to nesting issues
+    # post_menu_start_tags = ['<Menu.Item']
+    # post_menu_targets = [
+    #     'testID="postDropdownTranslateBtn"',
+    #     'testID="postDropdownCopyTextBtn"',
+    #     'testID="postDropdownShowMoreBtn"',
+    #     'testID="postDropdownShowLessBtn"',
+    #     'testID="postDropdownMuteThreadBtn"',
+    #     'testID="postDropdownReportMisclassificationBtn"',
+    # ]
+    # process_file(p('src/components/PostControls/PostMenu/PostMenuItems.tsx'), indent_config=(post_menu_start_tags, post_menu_targets))
 
     # 4. ContentAndMediaSettings.tsx
     settings_patterns = [
