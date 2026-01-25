@@ -76,10 +76,11 @@ def patch_post_feed():
     
     # 0. Add masonryRow to FeedRow type
     if "type: 'masonryRow'" not in content.split('getItemsForFeedback')[0]:
-        content = content.replace(
-            "  | {",
-            "  | {\n    type: 'masonryRow'\n    key: string\n    leftItem: FeedRow | null\n    rightItem: FeedRow | null\n  }\n  | {",
-            1
+        content = re.sub(
+            r"(type FeedRow =[\s\n]*\| \{)",
+            r"\1\n    type: 'masonryRow'\n    key: string\n    leftItem: FeedRow | null\n    rightItem: FeedRow | null\n  }\n  | {",
+            content,
+            count=1
         )
 
     # 1. Ensure FeedMasonryRow is imported
@@ -281,19 +282,22 @@ def patch_post_feed_item():
     if len(parts) > 1:
         post_content_part = parts[1]
         
+        # Add to destructuring
         if "isMasonryItem," not in post_content_part.split("}: {")[0]:
-             post_content_part = re.sub(
-                 r"(replyMedia\s*=\s*\[\],)(\s*)\}: \{",
-                 r"\1\2  isMasonryItem,\2}: {",
-                 post_content_part,
-                 count=1,
-                 flags=re.DOTALL
-             )
+            # Regex to find the end of destructuring before the type block
+            post_content_part = re.sub(
+                r"(\}): \{",
+                r"  isMasonryItem,\n\1: {",
+                post_content_part,
+                count=1,
+                flags=re.DOTALL
+            )
         
+        # Add to type definition
         if "isMasonryItem?:" not in post_content_part:
             post_content_part = re.sub(
-                r"(replyMedia\?:.*?\])(\s*)\}\):",
-                r"\1\2  isMasonryItem?: boolean\2}):",
+                r"(\}\): React\.ReactNode)",
+                r"  isMasonryItem?: boolean\n\1",
                 post_content_part,
                 count=1,
                 flags=re.DOTALL
@@ -309,15 +313,27 @@ def patch_post_feed_item():
 
     # 7. Pass isMasonryItem from FeedItemInner to PostContent
     if "isMasonryItem={isMasonryItem}" not in content.split("let PostContent =")[0]:
+         # Find <PostContent call
          content = re.sub(
-             r"(replyMedia=\{replyMedia\})(\s*/>)",
-             r"\1\n              isMasonryItem={isMasonryItem}\2",
+             r"(<PostContent[\s\S]*?)(/>)",
+             r"\1  isMasonryItem={isMasonryItem}\n            \2",
              content,
              count=1,
              flags=re.DOTALL
          )
          
-    # 8. Ensure masonry styles are present
+    # 8. Pass isMasonryItem to PostControls
+    if "isMasonryItem={isMasonryItem}" not in content.split("let PostContent =")[0]:
+         # Find <PostControls call
+         content = re.sub(
+             r"(<PostControls[\s\S]*?)(/>)",
+             r"\1  isMasonryItem={isMasonryItem}\n            \2",
+             content,
+             count=1,
+             flags=re.DOTALL
+         )
+
+    # 9. Ensure masonry styles are present
     if "masonryOuter:" not in content:
          content = re.sub(
              r"(const styles = StyleSheet.create\(\{)",
@@ -366,39 +382,55 @@ def patch_post_controls():
     
     # 1. Add sanitizeHandle import
     if "sanitizeHandle" not in content:
-        content = content.replace(
-            "import * as Toast from '#/view/com/util/Toast'",
-            "import * as Toast from '#/view/com/util/Toast'\nimport {sanitizeHandle} from '#/lib/strings/handles'"
+        content = re.sub(
+            r"import \* as Toast from '#/view/com/util/Toast'",
+            "import * as Toast from '#/view/com/util/Toast'\nimport {sanitizeHandle} from '#/lib/strings/handles'",
+            content
         )
 
     # 2. Add useTheme import to #/alf
     if "useTheme" not in content:
-        if "import {atoms as a, useBreakpoints} from '#/alf'" in content:
-            content = content.replace(
-                "import {atoms as a, useBreakpoints} from '#/alf'",
-                "import {atoms as a, useBreakpoints, useTheme} from '#/alf'"
-            )
-        else:
-            content = content.replace(
-                "import {atoms as a,",
-                "import {atoms as a, useTheme,"
-            )
-
-    # 3. Add UserAvatar import
-    if "UserAvatar" not in content and "import {Reply as Bubble}" in content:
-        content = content.replace(
-            "import {Reply as Bubble}",
-            "import {UserAvatar} from '#/view/com/util/UserAvatar'\nimport {Reply as Bubble}"
+        content = re.sub(
+            r"import\s*\{\s*atoms as a,\s*useBreakpoints\s*\}\s*from\s*'#/alf'",
+            "import {atoms as a, useBreakpoints, useTheme} from '#/alf'",
+            content
         )
 
-    # 4. Inject Avatar + Handle into JSX
+    # 3. Add UserAvatar import
+    if "UserAvatar" not in content:
+        content = re.sub(
+            r"import\s*\{\s*Reply\s*as\s*Bubble\s*\}\s*from\s*'#/components/icons/Reply'",
+            "import {UserAvatar} from '#/view/com/util/UserAvatar'\nimport {Reply as Bubble} from '#/components/icons/Reply'",
+            content
+        )
+
+    # 4. Add isMasonryItem to props
+    if "isMasonryItem" not in content.split('const ax = useAnalytics()')[0]:
+        content = re.sub(
+            r"(variant,)(\s*)\}: \{",
+            r"\1\2  isMasonryItem,\2}: {",
+            content,
+            count=1,
+            flags=re.DOTALL
+        )
+        content = re.sub(
+            r"(variant\?: 'compact' \| 'normal' \| 'large')(\s*)\}\):",
+            r"\1\2  isMasonryItem?: boolean\2}):",
+            content,
+            count=1,
+            flags=re.DOTALL
+        )
+
+    # 5. Inject Avatar + Handle into JSX
     if "marginLeft: 6" not in content:
-        pattern = r"(return \(\s*<View\s*style=\[[\s\S]*?a\.gap_sm,\s*style,\s*\]\s*>\s*)"
-        insertion = """      {/* Left side: Avatar + Handle (InlineTextPost style) */}
-      <View style={[a.flex_row, a.align_center, a.gap_sm, { flex: 1, marginLeft: 6 }]}>
-        <UserAvatar size={24} avatar={post.author.avatar} type="user" />
-        <PostControlButtonText style={[a.text_sm, t.atoms.text_contrast_medium]}>{sanitizeHandle(post.author.handle, "@")}</PostControlButtonText>
-      </View>
+        pattern = r"(return \(\s*<View\s*style=\[[\s\S]*?style,\s*\]\s*>\s*)"
+        insertion = """      {/* Left side: Avatar + Handle (InlineTextPost style) - ONLY IN MASONRY */}
+      {isMasonryItem && (
+        <View style={[a.flex_row, a.align_center, a.gap_sm, { flex: 1, marginLeft: 6 }]}>
+          <UserAvatar size={24} avatar={post.author.avatar} type="user" />
+          <PostControlButtonText style={[a.text_sm, t.atoms.text_contrast_medium]}>{sanitizeHandle(post.author.handle, "@")}</PostControlButtonText>
+        </View>
+      )}
 """
         if re.search(pattern, content):
             content = re.sub(pattern, r"\1" + insertion, content)
@@ -410,14 +442,16 @@ def patch_video_embeds():
     content = read_file(VIDEO_EMBED_NATIVE_PATH)
     if content:
         if "useTheme" not in content:
-            content = content.replace(
-                "import { atoms as a } from '#/alf'",
-                "import { atoms as a, useTheme } from '#/alf'"
+            content = re.sub(
+                r"import\s*\{\s*atoms as a\s*\}\s*from\s*'#/alf'",
+                "import { atoms as a, useTheme } from '#/alf'",
+                content
             )
         if "PostEmbedViewContext" not in content:
-             content = content.replace(
-                 "import * as VideoFallback from './VideoEmbedInner/VideoFallback'",
-                 "import * as VideoFallback from './VideoEmbedInner/VideoFallback'\nimport {type CommonProps, PostEmbedViewContext} from '../types'"
+             content = re.sub(
+                 r"import \* as VideoFallback from './VideoEmbedInner/VideoFallback'",
+                 "import * as VideoFallback from './VideoEmbedInner/VideoFallback'\nimport {type CommonProps, PostEmbedViewContext} from '../types'",
+                 content
              )
         if ": Props" in content and ": Props & CommonProps" not in content:
             content = content.replace(": Props", ": Props & CommonProps")
@@ -435,9 +469,10 @@ def patch_video_embeds():
     content = read_file(VIDEO_EMBED_WEB_PATH)
     if content:
         if "PostEmbedViewContext" not in content:
-             content = content.replace(
-                 "import * as VideoFallback from './VideoEmbedInner/VideoFallback'",
-                 "import * as VideoFallback from './VideoEmbedInner/VideoFallback'\nimport {type CommonProps, PostEmbedViewContext} from '../types'"
+             content = re.sub(
+                 r"import \* as VideoFallback from './VideoEmbedInner/VideoFallback'",
+                 "import * as VideoFallback from './VideoEmbedInner/VideoFallback'\nimport {type CommonProps, PostEmbedViewContext} from '../types'",
+                 content
              )
         if "function VideoEmbed({embed}: {embed: AppBskyEmbedVideo.View})" in content:
             content = content.replace(
